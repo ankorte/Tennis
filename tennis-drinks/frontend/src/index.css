@@ -1,0 +1,102 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bruvi-red:  #E8002D;
+  --bruvi-blue: #1A3B8F;
+  --bruvi-blue-dark: #0F2566;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #F5F6FA;
+}
+
+/* ── Buttons ─────────────────────────────────────────── */
+.btn-primary {
+  display: block;
+  width: 100%;
+  background: var(--bruvi-red);
+  color: white;
+  font-weight: 700;
+  font-size: 1.125rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.1s;
+  text-align: center;
+  text-decoration: none;
+}
+.btn-primary:active  { transform: scale(0.95); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-secondary {
+  display: block;
+  width: 100%;
+  background: white;
+  color: var(--bruvi-red);
+  font-weight: 700;
+  font-size: 1.125rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  border: 2px solid var(--bruvi-red);
+  cursor: pointer;
+  transition: transform 0.1s;
+  text-align: center;
+  text-decoration: none;
+}
+.btn-secondary:active { transform: scale(0.95); }
+
+.btn-danger {
+  background: #dc2626;
+  color: white;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.btn-danger:active { transform: scale(0.95); }
+
+/* ── Cards & Inputs ──────────────────────────────────── */
+.card {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.input-field {
+  width: 100%;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  font-size: 1.125rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.input-field:focus { border-color: var(--bruvi-red); }
+
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* ── Tailwind overrides for dynamic classes ──────────── */
+.bg-tennis-green, .bg-tennis-dark { background: var(--bruvi-blue) !important; }
+.text-tennis-green { color: var(--bruvi-red) !important; }
+.text-tennis-dark  { color: var(--bruvi-blue) !important; }
+.text-tennis-light { color: #FF9DB5 !important; }
+.border-tennis-green { border-color: var(--bruvi-red) !important; }
+.focus\:border-tennis-green:focus { border-color: var(--bruvi-red) !important; }
+.accent-tennis-green { accent-color: var(--bruvi-red); }
+.ring-tennis-green { --tw-ring-color: var(--bruvi-red); }

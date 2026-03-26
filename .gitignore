@@ -1,0 +1,25 @@
+node_modules/
+.env
+.env.local
+.env*.local
+dist/
+build/
+.next/
+*.log
+.DS_Store
+Thumbs.db
+
+# Datenbank-Dateien
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+
+# Deploy-Archive
+*.zip
+
+# Visual Studio
+.vs/
+
+# Claude lokale Einstellungen
+.claude/settings.local.json
