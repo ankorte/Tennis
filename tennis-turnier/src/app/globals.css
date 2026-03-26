@@ -1,0 +1,209 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Color Themes (CSS custom properties) ────────────────────────────────── */
+
+:root,
+[data-theme="gruen"] {
+  --c-nav:       #166534;   /* green-800  */
+  --c-nav-dark:  #14532d;   /* green-900  */
+  --c-btn:       #15803d;   /* green-700  */
+  --c-btn-dark:  #166534;   /* green-800  */
+  --c-from:      #15803d;
+  --c-to:        #14532d;
+  --c-light:     #f0fdf4;   /* green-50   */
+  --c-light-2:   #dcfce7;   /* green-100  */
+  --c-border:    #86efac;   /* green-300  */
+  --c-ring:      #22c55e;   /* green-500  */
+  --c-text-nav:  #bbf7d0;   /* green-200  */
+  --c-text-on:   #166534;   /* green-800  */
+}
+
+[data-theme="blau"] {
+  --c-nav:       #1e3a8a;
+  --c-nav-dark:  #1e3170;
+  --c-btn:       #1d4ed8;
+  --c-btn-dark:  #1e40af;
+  --c-from:      #1d4ed8;
+  --c-to:        #1e3a8a;
+  --c-light:     #eff6ff;
+  --c-light-2:   #dbeafe;
+  --c-border:    #93c5fd;
+  --c-ring:      #3b82f6;
+  --c-text-nav:  #bfdbfe;
+  --c-text-on:   #1e40af;
+}
+
+[data-theme="lila"] {
+  --c-nav:       #5b21b6;
+  --c-nav-dark:  #4c1d95;
+  --c-btn:       #7c3aed;
+  --c-btn-dark:  #6d28d9;
+  --c-from:      #7c3aed;
+  --c-to:        #4c1d95;
+  --c-light:     #faf5ff;
+  --c-light-2:   #ede9fe;
+  --c-border:    #c4b5fd;
+  --c-ring:      #a78bfa;
+  --c-text-nav:  #ddd6fe;
+  --c-text-on:   #6d28d9;
+}
+
+[data-theme="orange"] {
+  --c-nav:       #c2410c;
+  --c-nav-dark:  #9a3412;
+  --c-btn:       #ea580c;
+  --c-btn-dark:  #c2410c;
+  --c-from:      #ea580c;
+  --c-to:        #9a3412;
+  --c-light:     #fff7ed;
+  --c-light-2:   #ffedd5;
+  --c-border:    #fdba74;
+  --c-ring:      #fb923c;
+  --c-text-nav:  #fed7aa;
+  --c-text-on:   #c2410c;
+}
+
+[data-theme="dunkel"] {
+  --c-nav:       #1e293b;
+  --c-nav-dark:  #0f172a;
+  --c-btn:       #475569;
+  --c-btn-dark:  #334155;
+  --c-from:      #334155;
+  --c-to:        #0f172a;
+  --c-light:     #f1f5f9;
+  --c-light-2:   #e2e8f0;
+  --c-border:    #94a3b8;
+  --c-ring:      #64748b;
+  --c-text-nav:  #cbd5e1;
+  --c-text-on:   #334155;
+}
+
+/* ── Theme-aware utility classes ─────────────────────────────────────────── */
+.th-nav        { background-color: var(--c-nav); }
+.th-nav-dark   { background-color: var(--c-nav-dark); }
+.th-btn        { background-color: var(--c-btn); color: #fff; }
+.th-btn:hover  { background-color: var(--c-btn-dark); }
+.th-gradient   { background: linear-gradient(135deg, var(--c-from), var(--c-to)); }
+.th-light      { background-color: var(--c-light); }
+.th-light-2    { background-color: var(--c-light-2); }
+.th-text-nav   { color: var(--c-text-nav); }
+.th-text-on    { color: var(--c-text-on); }
+.th-border     { border-color: var(--c-border); }
+.th-ring:focus { outline: none; box-shadow: 0 0 0 2px var(--c-ring); }
+
+/* Custom bracket connector CSS */
+.bracket-connector {
+  position: relative;
+}
+
+.bracket-connector::after {
+  content: '';
+  position: absolute;
+  right: -20px;
+  top: 50%;
+  width: 20px;
+  height: 1px;
+  background-color: #6b7280;
+}
+
+.bracket-pair {
+  position: relative;
+}
+
+.bracket-pair::before {
+  content: '';
+  position: absolute;
+  right: -20px;
+  top: 25%;
+  width: 1px;
+  height: 50%;
+  background-color: #6b7280;
+}
+
+.bracket-pair::after {
+  content: '';
+  position: absolute;
+  right: -20px;
+  top: 50%;
+  width: 20px;
+  height: 1px;
+  background-color: #6b7280;
+}
+
+/* Match card styles */
+.match-card {
+  @apply border rounded-lg overflow-hidden shadow-sm;
+  min-width: 180px;
+}
+
+.match-player {
+  @apply px-3 py-2 text-sm flex items-center justify-between border-b last:border-b-0;
+}
+
+.match-player.winner {
+  @apply bg-green-50 font-semibold text-green-800;
+}
+
+.match-player.loser {
+  @apply bg-gray-50 text-gray-500;
+}
+
+.match-player.pending {
+  @apply bg-white text-gray-700;
+}
+
+/* Bracket round column */
+.bracket-round {
+  @apply flex flex-col gap-4;
+}
+
+/* Toast notification */
+.toast {
+  @apply fixed bottom-4 right-4 px-4 py-3 rounded-lg shadow-lg z-50 text-white;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Status badges */
+.badge-anmeldung {
+  @apply bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-aktiv {
+  @apply bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-abgeschlossen {
+  @apply bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs font-medium;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

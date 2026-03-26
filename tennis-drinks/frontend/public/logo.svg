@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Outer ring -->
+  <circle cx="100" cy="100" r="97" fill="white" stroke="#B4BCDC" stroke-width="3"/>
+  <!-- Red dot left -->
+  <circle cx="14" cy="100" r="5" fill="#E8002D"/>
+  <!-- Red dot right -->
+  <circle cx="186" cy="100" r="5" fill="#E8002D"/>
+
+  <!-- Curved text paths -->
+  <defs>
+    <path id="topArc"    d="M 22,100 A 78,78 0 0,1 178,100"/>
+    <path id="bottomArc" d="M 26,108 A 82,82 0 0,0 174,108"/>
+  </defs>
+
+  <!-- TV BRUVI top -->
+  <text font-family="'Arial Black','Arial',sans-serif" font-size="22" font-weight="900"
+        fill="#E8002D" text-anchor="middle" letter-spacing="2">
+    <textPath href="#topArc" startOffset="50%">TV BRUVI</textPath>
+  </text>
+
+  <!-- GEMEINSAM AKTIV! bottom -->
+  <text font-family="'Arial Black','Arial',sans-serif" font-size="14" font-weight="900"
+        fill="#E8002D" text-anchor="middle" letter-spacing="1">
+    <textPath href="#bottomArc" startOffset="50%">GEMEINSAM AKTIV!</textPath>
+  </text>
+
+  <!-- Navy blue inner circle -->
+  <circle cx="100" cy="96" r="64" fill="#1A3B8F"/>
+
+  <!-- Red center oval -->
+  <ellipse cx="100" cy="92" rx="50" ry="52" fill="#E8002D"/>
+
+  <!-- White athletic figure -->
+  <!-- Head -->
+  <circle cx="110" cy="58" r="10" fill="white"/>
+  <!-- Body sweep -->
+  <path d="M 60,118 Q 74,82 100,80 Q 118,79 120,96
+           Q 121,106 114,114 L 108,108 Q 116,102 115,94
+           Q 114,86 104,85 Q 92,84 82,96 Q 72,108 68,118 Z"
+        fill="white"/>
+  <!-- Leg sweep bottom -->
+  <path d="M 68,118 Q 78,124 84,120 L 108,108 Q 114,114 110,118
+           Q 100,126 86,124 Q 74,124 66,120 Z"
+        fill="white"/>
+
+  <!-- von 1863 e.V. -->
+  <text x="138" y="100" font-family="Arial,sans-serif" font-size="7" fill="white"
+        transform="rotate(80,138,96)" opacity="0.9">von 1863 e.V.</text>
+</svg>

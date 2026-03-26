@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aufgabe diktieren → Microsoft Planner</title>
+  <script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #f3f2f1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 16px;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #323130;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #605e5c;
+      font-size: 0.9rem;
+      margin-bottom: 32px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      padding: 32px;
+      width: 100%;
+      max-width: 560px;
+    }
+
+    /* ── Config Banner ── */
+    #config-banner {
+      background: #fff4ce;
+      border: 1px solid #f7c948;
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 24px;
+      font-size: 0.85rem;
+      color: #3d2e00;
+    }
+    #config-banner strong { display: block; margin-bottom: 6px; }
+    #config-banner code {
+      background: #fde7a0;
+      border-radius: 3px;
+      padding: 1px 4px;
+      font-size: 0.8rem;
+    }
+
+    /* ── Config Fields ── */
+    .config-section {
+      background: #faf9f8;
+      border: 1px solid #edebe9;
+      border-radius: 6px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .config-section h3 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #605e5c;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 14px;
+    }
+    .field { margin-bottom: 14px; }
+    .field label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: #323130;
+      margin-bottom: 4px;
+    }
+    .field input, .field select {
+      width: 100%;
+      border: 1px solid #c8c6c4;
+      border-radius: 4px;
+      padding: 7px 10px;
+      font-size: 0.88rem;
+      color: #323130;
+      background: white;
+      transition: border-color 0.15s;
+    }
+    .field input:focus, .field select:focus {
+      outline: none;
+      border-color: #0078d4;
+      box-shadow: 0 0 0 2px rgba(0,120,212,0.15);
+    }
+    .field .hint {
+      font-size: 0.75rem;
+      color: #a19f9d;
+      margin-top: 3px;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 16px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+    }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary { background: #0078d4; color: white; }
+    .btn-primary:hover:not(:disabled) { background: #106ebe; }
+    .btn-danger  { background: #d13438; color: white; }
+    .btn-danger:hover:not(:disabled)  { background: #a4262c; }
+    .btn-ghost   { background: #edebe9; color: #323130; }
+    .btn-ghost:hover:not(:disabled)   { background: #e1dfdd; }
+
+    /* ── Login row ── */
+    .login-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    #login-status {
+      font-size: 0.85rem;
+      color: #605e5c;
+    }
+    #login-status.ok { color: #107c10; font-weight: 500; }
+
+    /* ── Mic area ── */
+    .mic-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 24px 0;
+    }
+
+    .mic-btn {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      border: none;
+      background: #0078d4;
+      color: white;
+      font-size: 2.2rem;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,120,212,0.35);
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .mic-btn:hover { background: #106ebe; transform: scale(1.04); }
+    .mic-btn.recording {
+      background: #d13438;
+      animation: pulse 1.2s infinite;
+      box-shadow: 0 4px 20px rgba(209,52,56,0.5);
+    }
+    .mic-btn:disabled { opacity: 0.35; cursor: not-allowed; animation: none; }
+
+    @keyframes pulse {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.07); }
+      100% { transform: scale(1); }
+    }
+
+    .mic-label {
+      font-size: 0.85rem;
+      color: #605e5c;
+    }
+
+    /* ── Transcript ── */
+    .transcript-area {
+      margin-bottom: 20px;
+    }
+    .transcript-area label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: #323130;
+      margin-bottom: 6px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 90px;
+      border: 1px solid #c8c6c4;
+      border-radius: 4px;
+      padding: 10px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      resize: vertical;
+      color: #323130;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: #0078d4;
+      box-shadow: 0 0 0 2px rgba(0,120,212,0.15);
+    }
+
+    /* ── Action row ── */
+    .action-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #107c10;
+      color: white;
+      border-radius: 6px;
+      padding: 12px 24px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease;
+      z-index: 999;
+      white-space: nowrap;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.error { background: #d13438; }
+
+    /* ── Planner select row ── */
+    .planner-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .planner-row .field { flex: 1; margin-bottom: 0; }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #edebe9;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🎙️ Aufgabe diktieren</h1>
+<p class="subtitle">Sprich eine Aufgabe ein – sie wird direkt in Microsoft Planner angelegt.</p>
+
+<div class="card">
+
+  <!-- Config Banner -->
+  <div id="config-banner">
+    <strong>⚙️ Einmalige Konfiguration erforderlich</strong>
+    Trage unten deine Azure-App-Daten ein. Diese werden nur lokal in deinem Browser gespeichert.
+  </div>
+
+  <!-- Azure Config -->
+  <div class="config-section">
+    <h3>Azure App-Konfiguration</h3>
+    <div class="field">
+      <label>Client-ID (Application ID)</label>
+      <input id="cfg-clientId" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+    </div>
+    <div class="field">
+      <label>Tenant-ID</label>
+      <input id="cfg-tenantId" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+    </div>
+    <button class="btn btn-ghost" onclick="saveConfig()">💾 Speichern &amp; initialisieren</button>
+  </div>
+
+  <!-- Login -->
+  <div class="login-row">
+    <button id="btn-login" class="btn btn-primary" onclick="login()" disabled>🔑 Mit Microsoft anmelden</button>
+    <span id="login-status">Nicht angemeldet</span>
+    <button id="btn-logout" class="btn btn-ghost" onclick="logout()" style="display:none">Abmelden</button>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- Planner Auswahl -->
+  <div class="planner-row">
+    <div class="field">
+      <label>Planner-Plan</label>
+      <select id="sel-plan" onchange="loadBuckets()">
+        <option value="">— Plan wählen —</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Bucket</label>
+      <select id="sel-bucket">
+        <option value="">— Bucket wählen —</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Mic -->
+  <div class="mic-wrapper">
+    <button class="mic-btn" id="mic-btn" onclick="toggleRecording()" disabled title="Aufnahme starten">
+      🎙️
+    </button>
+    <span class="mic-label" id="mic-label">Klicke zum Diktieren</span>
+  </div>
+
+  <!-- Transcript -->
+  <div class="transcript-area">
+    <label for="task-text">Aufgabentext (bearbeitbar)</label>
+    <textarea id="task-text" placeholder="Gesprochener Text erscheint hier – du kannst ihn noch anpassen…"></textarea>
+  </div>
+
+  <!-- Due date (optional) -->
+  <div class="field" style="margin-bottom:20px">
+    <label>Fälligkeitsdatum (optional)</label>
+    <input id="task-due" type="date" />
+  </div>
+
+  <!-- Actions -->
+  <div class="action-row">
+    <button class="btn btn-primary" id="btn-create" onclick="createTask()" disabled>✅ Aufgabe anlegen</button>
+    <button class="btn btn-ghost" onclick="clearText()">🗑️ Zurücksetzen</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let msalInstance = null;
+let account = null;
+let recognition = null;
+let isRecording = false;
+
+// ── Config ────────────────────────────────────────────────────────────────────
+function loadStoredConfig() {
+  const clientId = localStorage.getItem('pk_clientId') || '';
+  const tenantId = localStorage.getItem('pk_tenantId') || '';
+  document.getElementById('cfg-clientId').value = clientId;
+  document.getElementById('cfg-tenantId').value = tenantId;
+  if (clientId && tenantId) {
+    initMsal(clientId, tenantId);
+    document.getElementById('config-banner').style.display = 'none';
+  }
+}
+
+function saveConfig() {
+  const clientId = document.getElementById('cfg-clientId').value.trim();
+  const tenantId = document.getElementById('cfg-tenantId').value.trim();
+  if (!clientId || !tenantId) {
+    showToast('Bitte Client-ID und Tenant-ID eingeben.', true);
+    return;
+  }
+  localStorage.setItem('pk_clientId', clientId);
+  localStorage.setItem('pk_tenantId', tenantId);
+  initMsal(clientId, tenantId);
+  document.getElementById('config-banner').style.display = 'none';
+  showToast('Konfiguration gespeichert.');
+}
+
+// ── MSAL ──────────────────────────────────────────────────────────────────────
+function initMsal(clientId, tenantId) {
+  const config = {
+    auth: {
+      clientId,
+      authority: `https://login.microsoftonline.com/${tenantId}`,
+      redirectUri: window.location.href.split('?')[0]
+    },
+    cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: true }
+  };
+  msalInstance = new msal.PublicClientApplication(config);
+  msalInstance.handleRedirectPromise().then(resp => {
+    if (resp) {
+      account = resp.account;
+      onLoggedIn();
+    } else {
+      const accounts = msalInstance.getAllAccounts();
+      if (accounts.length > 0) {
+        account = accounts[0];
+        onLoggedIn();
+      }
+    }
+  }).catch(e => showToast('MSAL Fehler: ' + e.message, true));
+
+  document.getElementById('btn-login').disabled = false;
+}
+
+async function login() {
+  if (!msalInstance) return;
+  try {
+    await msalInstance.loginPopup({ scopes: ['Tasks.ReadWrite', 'Group.ReadWrite.All', 'User.Read'] });
+    const accounts = msalInstance.getAllAccounts();
+    if (accounts.length > 0) { account = accounts[0]; onLoggedIn(); }
+  } catch(e) {
+    if (!e.message.includes('user_cancelled')) showToast('Anmeldung fehlgeschlagen: ' + e.message, true);
+  }
+}
+
+function logout() {
+  if (msalInstance) msalInstance.logoutPopup();
+  account = null;
+  document.getElementById('login-status').textContent = 'Nicht angemeldet';
+  document.getElementById('login-status').className = '';
+  document.getElementById('btn-logout').style.display = 'none';
+  document.getElementById('btn-login').style.display = '';
+  document.getElementById('mic-btn').disabled = true;
+  document.getElementById('btn-create').disabled = true;
+  document.getElementById('sel-plan').innerHTML = '<option value="">— Plan wählen —</option>';
+  document.getElementById('sel-bucket').innerHTML = '<option value="">— Bucket wählen —</option>';
+}
+
+async function onLoggedIn() {
+  const name = account.name || account.username;
+  const status = document.getElementById('login-status');
+  status.textContent = `✓ Angemeldet als ${name}`;
+  status.className = 'ok';
+  document.getElementById('btn-login').style.display = 'none';
+  document.getElementById('btn-logout').style.display = '';
+  document.getElementById('mic-btn').disabled = false;
+  initSpeech();
+  await loadPlans();
+}
+
+// ── Graph API ─────────────────────────────────────────────────────────────────
+async function getToken() {
+  const scopes = ['Tasks.ReadWrite', 'Group.ReadWrite.All'];
+  try {
+    const res = await msalInstance.acquireTokenSilent({ scopes, account });
+    return res.accessToken;
+  } catch {
+    const res = await msalInstance.acquireTokenPopup({ scopes });
+    return res.accessToken;
+  }
+}
+
+async function graphGet(url) {
+  const token = await getToken();
+  const r = await fetch(`https://graph.microsoft.com/v1.0${url}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!r.ok) throw new Error(`Graph ${r.status}: ${await r.text()}`);
+  return r.json();
+}
+
+async function graphPost(url, body) {
+  const token = await getToken();
+  const r = await fetch(`https://graph.microsoft.com/v1.0${url}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error(`Graph ${r.status}: ${await r.text()}`);
+  return r.json();
+}
+
+async function loadPlans() {
+  try {
+    const data = await graphGet('/me/planner/plans');
+    const sel = document.getElementById('sel-plan');
+    sel.innerHTML = '<option value="">— Plan wählen —</option>';
+    (data.value || []).forEach(p => {
+      const o = document.createElement('option');
+      o.value = p.id;
+      o.textContent = p.title;
+      sel.appendChild(o);
+    });
+    // Restore saved selection
+    const saved = localStorage.getItem('pk_planId');
+    if (saved) { sel.value = saved; if (sel.value) loadBuckets(); }
+  } catch(e) {
+    showToast('Pläne konnten nicht geladen werden: ' + e.message, true);
+  }
+}
+
+async function loadBuckets() {
+  const planId = document.getElementById('sel-plan').value;
+  const bucketSel = document.getElementById('sel-bucket');
+  bucketSel.innerHTML = '<option value="">— Bucket wählen —</option>';
+  if (!planId) return;
+  localStorage.setItem('pk_planId', planId);
+  try {
+    const data = await graphGet(`/planner/plans/${planId}/buckets`);
+    (data.value || []).forEach(b => {
+      const o = document.createElement('option');
+      o.value = b.id;
+      o.textContent = b.name;
+      bucketSel.appendChild(o);
+    });
+    const saved = localStorage.getItem('pk_bucketId');
+    if (saved) bucketSel.value = saved;
+  } catch(e) {
+    showToast('Buckets konnten nicht geladen werden: ' + e.message, true);
+  }
+}
+
+async function createTask() {
+  const planId = document.getElementById('sel-plan').value;
+  const bucketId = document.getElementById('sel-bucket').value;
+  const title = document.getElementById('task-text').value.trim();
+  const dueDate = document.getElementById('task-due').value;
+
+  if (!planId) { showToast('Bitte einen Plan auswählen.', true); return; }
+  if (!title)  { showToast('Aufgabentext ist leer.', true); return; }
+
+  localStorage.setItem('pk_bucketId', bucketId);
+
+  const body = { planId, title };
+  if (bucketId) body.bucketId = bucketId;
+  if (dueDate)  body.dueDateTime = new Date(dueDate).toISOString();
+
+  const btn = document.getElementById('btn-create');
+  btn.disabled = true;
+  btn.textContent = '⏳ Wird angelegt…';
+
+  try {
+    await graphPost('/planner/tasks', body);
+    showToast('✅ Aufgabe erfolgreich in Planner angelegt!');
+    clearText();
+  } catch(e) {
+    showToast('Fehler: ' + e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✅ Aufgabe anlegen';
+    updateCreateBtn();
+  }
+}
+
+// ── Speech ────────────────────────────────────────────────────────────────────
+function initSpeech() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    document.getElementById('mic-label').textContent = '⚠️ Diktierfunktion nicht unterstützt (Chrome empfohlen)';
+    document.getElementById('mic-btn').disabled = true;
+    return;
+  }
+  recognition = new SpeechRecognition();
+  recognition.lang = 'de-DE';
+  recognition.interimResults = true;
+  recognition.continuous = true;
+
+  let finalText = '';
+
+  recognition.onstart = () => {
+    isRecording = true;
+    const btn = document.getElementById('mic-btn');
+    btn.classList.add('recording');
+    btn.textContent = '⏹️';
+    document.getElementById('mic-label').textContent = '● Aufnahme läuft… (nochmals klicken zum Stoppen)';
+    finalText = document.getElementById('task-text').value;
+  };
+
+  recognition.onresult = (e) => {
+    let interim = '';
+    let newFinal = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) newFinal += e.results[i][0].transcript + ' ';
+      else interim += e.results[i][0].transcript;
+    }
+    finalText += newFinal;
+    document.getElementById('task-text').value = (finalText + interim).trim();
+    updateCreateBtn();
+  };
+
+  recognition.onerror = (e) => {
+    if (e.error !== 'aborted') showToast('Mikrofon-Fehler: ' + e.error, true);
+    stopRecording();
+  };
+
+  recognition.onend = () => stopRecording();
+}
+
+function toggleRecording() {
+  if (!recognition) return;
+  if (isRecording) { recognition.stop(); }
+  else { recognition.start(); }
+}
+
+function stopRecording() {
+  isRecording = false;
+  const btn = document.getElementById('mic-btn');
+  btn.classList.remove('recording');
+  btn.textContent = '🎙️';
+  document.getElementById('mic-label').textContent = 'Klicke zum Diktieren';
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function clearText() {
+  document.getElementById('task-text').value = '';
+  document.getElementById('task-due').value = '';
+  updateCreateBtn();
+}
+
+function updateCreateBtn() {
+  const hasText = document.getElementById('task-text').value.trim().length > 0;
+  document.getElementById('btn-create').disabled = !account || !hasText;
+}
+
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = isError ? 'error show' : 'show';
+  setTimeout(() => { t.className = isError ? 'error' : ''; }, 4000);
+}
+
+document.getElementById('task-text').addEventListener('input', updateCreateBtn);
+
+// Init
+loadStoredConfig();
+</script>
+</body>
+</html>

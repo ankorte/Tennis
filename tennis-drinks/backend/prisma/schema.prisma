@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model audit_log {
+  id          Int      @id @default(autoincrement())
+  entity_type String
+  entity_id   Int
+  action      String
+  old_value   String?
+  new_value   String?
+  created_by  Int?
+  created_at  String   @default("datetime('now')")
+  members     members? @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model billings {
+  id           Int     @id @default(autoincrement())
+  period_from  String
+  period_to    String
+  member_id    Int
+  total_amount Float   @default(0)
+  status       String  @default("offen")
+  exported_at  String?
+  created_at   String  @default("datetime('now')")
+  members      members @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model bookings {
+  id                                   Int             @id @default(autoincrement())
+  drink_id                             Int
+  member_id                            Int?
+  group_id                             Int?
+  quantity                             Int             @default(1)
+  unit_price                           Float
+  total_price                          Float
+  booking_type                         String          @default("einzeln")
+  status                               String          @default("bestaetigt")
+  guest_note                           String?
+  created_by                           Int
+  cancelled                            Int             @default(0)
+  cancel_ref                           Int?
+  billing_id                           Int?
+  created_at                           String          @default("datetime('now')")
+  bookings                             bookings?       @relation("bookingsTobookings", fields: [cancel_ref], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  other_bookings                       bookings[]      @relation("bookingsTobookings")
+  members_bookings_created_byTomembers members         @relation("bookings_created_byTomembers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groups                               groups?         @relation(fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  members_bookings_member_idTomembers  members?        @relation("bookings_member_idTomembers", fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  drinks                               drinks          @relation(fields: [drink_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  distributions                        distributions[]
+}
+
+model distributions {
+  id         Int      @id @default(autoincrement())
+  booking_id Int
+  member_id  Int
+  quantity   Float    @default(0)
+  amount     Float    @default(0)
+  created_at String   @default("datetime('now')")
+  members    members  @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  bookings   bookings @relation(fields: [booking_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model drinks {
+  id                  Int                   @id @default(autoincrement())
+  article_number      String                @unique(map: "sqlite_autoindex_drinks_1")
+  name                String
+  category            String
+  price               Float
+  purchase_price      Float?
+  stock               Int                   @default(0)
+  min_stock           Int                   @default(5)
+  unit                String                @default("Flasche")
+  active              Int                   @default(1)
+  qr_code             String?
+  deposit             Float?                @default(0)
+  vat_rate            Float?                @default(19.0)
+  created_at          String                @default("datetime('now')")
+  updated_at          String                @default("datetime('now')")
+  bookings            bookings[]
+  inventory_movements inventory_movements[]
+}
+
+model group_members {
+  group_id  Int
+  member_id Int
+  members   members @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groups    groups  @relation(fields: [group_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([group_id, member_id])
+}
+
+model groups {
+  id            Int             @id @default(autoincrement())
+  name          String
+  group_type    String          @default("spontan")
+  event_date    String?
+  created_by    Int
+  status        String          @default("offen")
+  created_at    String          @default("datetime('now')")
+  is_template   Int             @default(0)
+  bookings      bookings[]
+  group_members group_members[]
+  members       members         @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model inventory_movements {
+  id            Int     @id @default(autoincrement())
+  drink_id      Int
+  movement_type String
+  quantity      Int
+  comment       String?
+  created_by    Int
+  created_at    String  @default("datetime('now')")
+  members       members @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  drinks        drinks  @relation(fields: [drink_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model members {
+  id                                    Int                   @id @default(autoincrement())
+  member_number                         String                @unique(map: "sqlite_autoindex_members_1")
+  first_name                            String
+  last_name                             String
+  email                                 String                @unique(map: "sqlite_autoindex_members_2")
+  phone                                 String?
+  status                                String                @default("aktiv")
+  role                                  String                @default("mitglied")
+  pin_hash                              String
+  team                                  String?
+  active                                Int                   @default(1)
+  created_at                            String                @default("datetime('now')")
+  updated_at                            String                @default("datetime('now')")
+  audit_log                             audit_log[]
+  billings                              billings[]
+  bookings_bookings_created_byTomembers bookings[]            @relation("bookings_created_byTomembers")
+  bookings_bookings_member_idTomembers  bookings[]            @relation("bookings_member_idTomembers")
+  distributions                         distributions[]
+  group_members                         group_members[]
+  groups                                groups[]
+  inventory_movements                   inventory_movements[]
+}

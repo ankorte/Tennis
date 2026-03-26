@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Spieler {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwortHash String
+  rolle        String   @default("spieler") // "spieler" | "admin"
+  erstelltAm   DateTime @default(now())
+
+  anmeldungen  Anmeldung[]
+  siege        Spiel[]   @relation("Sieger")
+  spiele1      Spiel[]   @relation("Spieler1")
+  spiele2      Spiel[]   @relation("Spieler2")
+}
+
+model Turnier {
+  id           Int      @id @default(autoincrement())
+  name         String
+  beschreibung String?
+  status       String   @default("anmeldung") // "anmeldung" | "aktiv" | "abgeschlossen"
+  maxSpieler   Int      @default(16)
+  erstelltAm   DateTime @default(now())
+
+  anmeldungen Anmeldung[]
+  spiele      Spiel[]
+}
+
+model Anmeldung {
+  id           Int      @id @default(autoincrement())
+  turnierId    Int
+  spielerId    Int
+  setzung      Int?
+  angemeldetAm DateTime @default(now())
+
+  turnier     Turnier  @relation(fields: [turnierId], references: [id])
+  spieler     Spieler  @relation(fields: [spielerId], references: [id])
+
+  @@unique([turnierId, spielerId])
+}
+
+model Spiel {
+  id               Int      @id @default(autoincrement())
+  turnierId        Int
+  runde            String   // "WB-R1", "WB-R2", "WB-SF", "WB-F", "LB-R1" bis "LB-F", "GF"
+  spielNummer      Int
+  spieler1Id       Int?
+  spieler2Id       Int?
+  siegerId         Int?
+  ergebnis         String?  // z.B. "6:3, 7:5"
+  geplanteZeit     DateTime?
+  platz            String?
+  status           String   @default("ausstehend") // "ausstehend" | "laufend" | "abgeschlossen" | "walkover"
+
+  // Verknüpfungen zum nächsten Spiel
+  siegerSpielId    Int?
+  siegerSlot       Int?     // 1 oder 2
+  verliererSpielId Int?
+  verliererSlot    Int?     // 1 oder 2
+
+  turnier         Turnier  @relation(fields: [turnierId], references: [id])
+  spieler1        Spieler? @relation("Spieler1", fields: [spieler1Id], references: [id])
+  spieler2        Spieler? @relation("Spieler2", fields: [spieler2Id], references: [id])
+  sieger          Spieler? @relation("Sieger", fields: [siegerId], references: [id])
+}
