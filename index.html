@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tennis BruVi – Tennisclub Bruchhausen-Vilsen</title>
+  <meta name="description" content="Tennisclub Bruchhausen-Vilsen – Training, Turniere und Spaß am Tennis im Vilser Holz." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Base ──────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:      #2d7d46;
+      --green-dark: #1a5c30;
+      --green-light:#e8f5ed;
+      --yellow:     #f5c518;
+      --white:      #ffffff;
+      --bg:         #ffffff;
+      --bg-alt:     #f8fafc;
+      --gray-100:   #f1f5f9;
+      --gray-200:   #e2e8f0;
+      --gray-500:   #64748b;
+      --gray-700:   #334155;
+      --gray-900:   #0f172a;
+      --text:       #0f172a;
+      --text-muted: #64748b;
+      --card-bg:    #ffffff;
+      --border:     #e2e8f0;
+      --radius:     12px;
+      --shadow:     0 4px 24px rgba(0,0,0,.10);
+      --shadow-lg:  0 12px 48px rgba(0,0,0,.16);
+      --transition: .25s cubic-bezier(.4,0,.2,1);
+    }
+
+    [data-theme="dark"] {
+      --bg:         #0f172a;
+      --bg-alt:     #1e293b;
+      --card-bg:    #1e293b;
+      --text:       #f1f5f9;
+      --text-muted: #94a3b8;
+      --border:     #334155;
+      --gray-200:   #334155;
+      --gray-500:   #94a3b8;
+      --gray-700:   #cbd5e1;
+      --gray-900:   #f1f5f9;
+      --green-light:#1a3a25;
+      --shadow:     0 4px 24px rgba(0,0,0,.4);
+      --shadow-lg:  0 12px 48px rgba(0,0,0,.5);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.6;
+      overflow-x: hidden;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    img { max-width: 100%; display: block; }
+    a   { color: inherit; text-decoration: none; }
+    ul  { list-style: none; }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+
+    .section-label {
+      font-size: .75rem; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--green); margin-bottom: .5rem;
+    }
+    .section-title {
+      font-size: clamp(1.75rem, 4vw, 2.75rem);
+      font-weight: 800; line-height: 1.15; color: var(--text);
+    }
+    .section-title span { color: var(--green); }
+    .section-subtitle { margin-top: .75rem; font-size: 1.05rem; color: var(--text-muted); max-width: 560px; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: .5rem;
+      padding: .75rem 1.75rem; border-radius: 50px;
+      font-weight: 600; font-size: .95rem;
+      transition: all var(--transition); cursor: pointer; border: 2px solid transparent;
+    }
+    .btn-primary { background: var(--green); color: #fff; }
+    .btn-primary:hover { background: var(--green-dark); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(45,125,70,.35); }
+    .btn-outline { background: transparent; border-color: #fff; color: #fff; }
+    .btn-outline:hover { background: rgba(255,255,255,.15); transform: translateY(-2px); }
+    .btn-outline-green { background: transparent; border-color: var(--green); color: var(--green); }
+    .btn-outline-green:hover { background: var(--green); color: #fff; transform: translateY(-2px); }
+
+    /* ── Navbar ──────────────────────────────────────── */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      padding: 1rem 0; transition: all var(--transition);
+    }
+    .navbar.scrolled {
+      background: rgba(255,255,255,.95);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 2px 20px rgba(0,0,0,.08);
+      padding: .6rem 0;
+    }
+    [data-theme="dark"] .navbar.scrolled {
+      background: rgba(15,23,42,.95);
+    }
+    .navbar .container { display: flex; align-items: center; justify-content: space-between; }
+
+    .logo {
+      display: flex; align-items: center; gap: .75rem;
+      font-weight: 800; font-size: 1.25rem; color: #fff;
+      transition: color var(--transition);
+    }
+    .navbar.scrolled .logo { color: var(--text); }
+    .logo-icon {
+      width: 42px; height: 42px; background: var(--green);
+      border-radius: 10px; display: flex; align-items: center;
+      justify-content: center; font-size: 1.3rem; flex-shrink: 0;
+    }
+
+    .nav-right { display: flex; align-items: center; gap: .5rem; }
+    .nav-links { display: flex; align-items: center; gap: .25rem; }
+    .nav-links a {
+      padding: .5rem .9rem; border-radius: 8px;
+      font-size: .9rem; font-weight: 500;
+      color: rgba(255,255,255,.85); transition: all var(--transition);
+    }
+    .nav-links a:hover { color: #fff; background: rgba(255,255,255,.12); }
+    .navbar.scrolled .nav-links a { color: var(--text-muted); }
+    .navbar.scrolled .nav-links a:hover { color: var(--green); background: var(--green-light); }
+
+    .nav-cta { background: var(--green) !important; color: #fff !important; border-radius: 50px !important; padding: .5rem 1.2rem !important; }
+    .nav-cta:hover { background: var(--green-dark) !important; }
+
+    /* Dark mode toggle */
+    .theme-toggle {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; background: rgba(255,255,255,.15);
+      color: #fff; transition: all var(--transition);
+    }
+    .navbar.scrolled .theme-toggle { background: var(--gray-100); color: var(--text); }
+    .theme-toggle:hover { transform: scale(1.1); }
+
+    .hamburger {
+      display: none; flex-direction: column; gap: 5px;
+      cursor: pointer; padding: 8px; background: none; border: none;
+    }
+    .hamburger span {
+      display: block; width: 24px; height: 2px;
+      background: #fff; border-radius: 2px; transition: all var(--transition);
+    }
+    .navbar.scrolled .hamburger span { background: var(--text); }
+    .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px,5px); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px,-5px); }
+
+    .mobile-menu {
+      display: none; position: fixed; inset: 0;
+      background: rgba(15,23,42,.97); z-index: 999;
+      flex-direction: column; align-items: center; justify-content: center; gap: 1rem;
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a {
+      font-size: 1.3rem; font-weight: 600; color: #fff;
+      padding: .75rem 2rem; border-radius: 10px; transition: background var(--transition);
+    }
+    .mobile-menu a:hover { background: rgba(255,255,255,.08); }
+    .mobile-close {
+      position: absolute; top: 1.5rem; right: 1.5rem;
+      font-size: 1.5rem; color: #fff; cursor: pointer; background: none; border: none;
+    }
+
+    /* ── Hero ────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh; position: relative;
+      display: flex; align-items: center; overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(135deg, rgba(26,92,48,.92) 0%, rgba(45,125,70,.8) 60%, rgba(15,23,42,.7) 100%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cdefs%3E%3Cpattern id='c' patternUnits='userSpaceOnUse' width='120' height='120'%3E%3Crect width='120' height='120' fill='%232d7d46'/%3E%3Cline x1='0' y1='60' x2='120' y2='60' stroke='rgba(255,255,255,0.08)' stroke-width='2'/%3E%3Cline x1='60' y1='0' x2='60' y2='120' stroke='rgba(255,255,255,0.08)' stroke-width='2'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23c)'/%3E%3C/svg%3E");
+    }
+    .tennis-ball {
+      position: absolute; width: 320px; height: 320px;
+      right: 8%; top: 50%; transform: translateY(-50%);
+      opacity: .18; animation: float 6s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%,100% { transform: translateY(-50%) rotate(0deg); }
+      50%      { transform: translateY(calc(-50% - 20px)) rotate(180deg); }
+    }
+    .hero .container { position: relative; z-index: 1; padding-top: 6rem; padding-bottom: 4rem; }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: rgba(255,255,255,.15); backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,.25); color: #fff;
+      font-size: .85rem; font-weight: 600;
+      padding: .4rem 1rem; border-radius: 50px; margin-bottom: 1.5rem;
+    }
+    .hero-badge .dot {
+      width: 8px; height: 8px; background: var(--yellow);
+      border-radius: 50%; animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.4);opacity:.7} }
+
+    .hero h1 { font-size: clamp(2.5rem, 7vw, 5rem); font-weight: 800; line-height: 1.08; color: #fff; margin-bottom: 1.5rem; }
+    .hero h1 em { font-style: normal; color: var(--yellow); }
+    .hero p { font-size: clamp(1rem, 2.5vw, 1.2rem); color: rgba(255,255,255,.85); max-width: 560px; margin-bottom: 2.5rem; }
+    .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .hero-stats { display: flex; gap: 2.5rem; margin-top: 4rem; flex-wrap: wrap; }
+    .hero-stat { color: #fff; }
+    .hero-stat strong { display: block; font-size: 2rem; font-weight: 800; line-height: 1; }
+    .hero-stat span { font-size: .85rem; color: rgba(255,255,255,.7); }
+
+    .scroll-indicator {
+      position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+      z-index: 1; display: flex; flex-direction: column; align-items: center; gap: .4rem;
+      color: rgba(255,255,255,.6); font-size: .75rem; animation: bounce 2s infinite;
+    }
+    @keyframes bounce { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(6px)} }
+
+    /* ── Countdown ───────────────────────────────────── */
+    .countdown-section {
+      background: var(--green);
+      padding: 2.5rem 0;
+    }
+    .countdown-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1.5rem;
+    }
+    .countdown-label { color: rgba(255,255,255,.9); font-size: 1rem; font-weight: 500; }
+    .countdown-label strong { color: #fff; display: block; font-size: 1.2rem; font-weight: 800; margin-bottom: .25rem; }
+    .countdown-boxes { display: flex; gap: 1rem; }
+    .countdown-box {
+      background: rgba(255,255,255,.15); backdrop-filter: blur(8px);
+      border-radius: 12px; padding: .75rem 1.25rem; text-align: center; min-width: 70px;
+    }
+    .countdown-box .num { font-size: 2rem; font-weight: 800; color: #fff; line-height: 1; display: block; }
+    .countdown-box .lbl { font-size: .7rem; color: rgba(255,255,255,.75); text-transform: uppercase; letter-spacing: .08em; }
+    .countdown-done { color: var(--yellow); font-size: 1.2rem; font-weight: 700; display: none; }
+
+    /* ── News Banner ─────────────────────────────────── */
+    .news-banner { background: var(--bg-alt); border-bottom: 1px solid var(--border); padding: 1rem 0; }
+    .news-banner .container { display: flex; align-items: center; gap: 1.5rem; }
+    .news-tag { background: var(--green); color: #fff; font-size: .75rem; font-weight: 700; padding: .2rem .7rem; border-radius: 4px; white-space: nowrap; flex-shrink: 0; }
+    .news-text { font-size: .9rem; color: var(--text-muted); }
+    .news-text a { color: var(--green); font-weight: 600; }
+
+    /* ── Sections ────────────────────────────────────── */
+    section { padding: 6rem 0; }
+    .section-alt { background: var(--bg-alt); }
+    .section-header { margin-bottom: 3.5rem; }
+    .section-header.centered { text-align: center; }
+    .section-header.centered .section-subtitle { margin: .75rem auto 0; }
+
+    /* ── Cards ───────────────────────────────────────── */
+    .card {
+      background: var(--card-bg); border-radius: var(--radius);
+      box-shadow: var(--shadow); overflow: hidden; transition: all var(--transition);
+    }
+    .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+
+    /* ── Aktuelles ───────────────────────────────────── */
+    #aktuelles .grid,
+    #angebote .grid,
+    #vorstand .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+
+    .news-card { padding: 2rem; }
+    .news-card-icon { width: 48px; height: 48px; background: var(--green-light); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 1.25rem; }
+    .news-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: .5rem; }
+    .news-card p { font-size: .92rem; color: var(--text-muted); line-height: 1.65; }
+    .news-card-meta { display: flex; align-items: center; gap: .5rem; font-size: .8rem; color: var(--text-muted); margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
+    .news-card-meta strong { color: var(--green); }
+
+    /* ── Angebote ────────────────────────────────────── */
+    #angebote .grid { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .offer-card { padding: 2rem; border: 2px solid var(--border); border-radius: var(--radius); transition: all var(--transition); background: var(--card-bg); position: relative; }
+    .offer-card:hover { border-color: var(--green); transform: translateY(-4px); box-shadow: var(--shadow); }
+    .offer-card.featured { border-color: var(--green); background: var(--green-light); }
+    .offer-badge { position: absolute; top: -12px; right: 1.5rem; background: var(--green); color: #fff; font-size: .75rem; font-weight: 700; padding: .25rem .75rem; border-radius: 50px; }
+    .offer-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+    .offer-card h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: .5rem; }
+    .offer-card p { font-size: .9rem; color: var(--text-muted); margin-bottom: 1.25rem; }
+    .offer-price { font-size: 1.5rem; font-weight: 800; color: var(--green); }
+    .offer-price span { font-size: .85rem; font-weight: 400; color: var(--text-muted); }
+    .offer-list { margin-top: 1rem; display: flex; flex-direction: column; gap: .4rem; }
+    .offer-list li { display: flex; align-items: center; gap: .5rem; font-size: .88rem; color: var(--gray-700); }
+    .offer-list li::before { content: "✓"; color: var(--green); font-weight: 700; flex-shrink: 0; }
+
+    /* ── Termine ─────────────────────────────────────── */
+    #termine .inner { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; }
+    .event-list { display: flex; flex-direction: column; gap: 1rem; }
+    .event-item { display: flex; gap: 1.25rem; padding: 1.25rem; border-radius: var(--radius); background: var(--card-bg); box-shadow: var(--shadow); transition: all var(--transition); }
+    .event-item:hover { transform: translateX(4px); box-shadow: var(--shadow-lg); }
+    .event-date { text-align: center; min-width: 52px; }
+    .event-date strong { display: block; font-size: 1.6rem; font-weight: 800; line-height: 1; color: var(--green); }
+    .event-date span { font-size: .72rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+    .event-info h4 { font-size: 1rem; font-weight: 700; margin-bottom: .25rem; }
+    .event-info p { font-size: .88rem; color: var(--text-muted); }
+    .event-tag { display: inline-block; font-size: .72rem; font-weight: 600; padding: .15rem .6rem; border-radius: 4px; margin-top: .4rem; }
+    .event-tag.green { background: var(--green-light); color: var(--green); }
+    .event-tag.yellow { background: #fef9e7; color: #a16207; }
+
+    /* ── Trainer ─────────────────────────────────────── */
+    #trainer .inner { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+    .trainer-card { background: var(--green); border-radius: 20px; padding: 2.5rem; color: #fff; position: relative; overflow: hidden; }
+    .trainer-card::before { content: "🎾"; position: absolute; right: -20px; top: -20px; font-size: 120px; opacity: .08; }
+    .trainer-avatar { width: 80px; height: 80px; background: rgba(255,255,255,.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin-bottom: 1.5rem; }
+    .trainer-card h3 { font-size: 1.5rem; font-weight: 800; margin-bottom: .25rem; }
+    .trainer-card .role { font-size: .9rem; opacity: .8; margin-bottom: 1.5rem; }
+    .trainer-stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+    .trainer-stat { background: rgba(255,255,255,.12); border-radius: 10px; padding: 1rem; }
+    .trainer-stat strong { display: block; font-size: 1.4rem; font-weight: 800; }
+    .trainer-stat span { font-size: .8rem; opacity: .8; }
+    .trainer-info-list { display: flex; flex-direction: column; gap: .5rem; font-size: .9rem; opacity: .9; }
+    .trainer-info-list li { display: flex; gap: .5rem; }
+    .trainer-text h2 { margin-bottom: 1rem; }
+    .trainer-text p { color: var(--text-muted); margin-bottom: 1rem; font-size: .95rem; line-height: 1.7; }
+    .contact-chips { display: flex; flex-direction: column; gap: .6rem; margin-top: 1.5rem; }
+    .chip { display: flex; align-items: center; gap: .75rem; padding: .75rem 1rem; border-radius: 10px; background: var(--green-light); font-size: .9rem; font-weight: 500; color: var(--green-dark); }
+
+    /* ── Galerie ─────────────────────────────────────── */
+    #galerie .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: auto;
+      gap: .75rem;
+    }
+    .gallery-item {
+      position: relative; overflow: hidden;
+      border-radius: var(--radius); cursor: pointer;
+      background: var(--green-light);
+    }
+    .gallery-item:nth-child(1) { grid-column: span 2; grid-row: span 2; }
+    .gallery-item:nth-child(4) { grid-column: span 2; }
+    .gallery-inner {
+      width: 100%; padding-bottom: 75%;
+      position: relative; overflow: hidden;
+    }
+    .gallery-item:nth-child(1) .gallery-inner { padding-bottom: 62%; }
+    .gallery-item:nth-child(4) .gallery-inner { padding-bottom: 50%; }
+    .gallery-placeholder {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: .5rem; font-size: 2.5rem;
+      transition: transform var(--transition);
+    }
+    .gallery-item:nth-child(1) .gallery-placeholder { font-size: 4rem; }
+    .gallery-placeholder span { font-size: .8rem; font-weight: 600; color: var(--green-dark); opacity: .7; }
+    .gallery-item:hover .gallery-placeholder { transform: scale(1.08); }
+    .gallery-overlay {
+      position: absolute; inset: 0;
+      background: rgba(45,125,70,.0); display: flex;
+      align-items: center; justify-content: center;
+      transition: background var(--transition);
+    }
+    .gallery-item:hover .gallery-overlay { background: rgba(45,125,70,.35); }
+    .gallery-overlay-icon { color: #fff; font-size: 2rem; opacity: 0; transition: opacity var(--transition); }
+    .gallery-item:hover .gallery-overlay-icon { opacity: 1; }
+
+    /* ── Testimonials ────────────────────────────────── */
+    #testimonials { background: var(--green); }
+    #testimonials .section-label { color: var(--yellow); }
+    #testimonials .section-title { color: #fff; }
+    .testimonials-slider { position: relative; overflow: hidden; margin-top: 2.5rem; }
+    .testimonials-track { display: flex; transition: transform .5s cubic-bezier(.4,0,.2,1); }
+    .testimonial-slide { min-width: 100%; padding: 0 .5rem; }
+    .testimonial-card {
+      background: rgba(255,255,255,.1); backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,.2); border-radius: 20px;
+      padding: 2.5rem; max-width: 700px; margin: 0 auto; text-align: center;
+    }
+    .testimonial-stars { font-size: 1.3rem; margin-bottom: 1rem; }
+    .testimonial-text { font-size: 1.1rem; color: rgba(255,255,255,.9); line-height: 1.7; font-style: italic; margin-bottom: 1.5rem; }
+    .testimonial-author { display: flex; flex-direction: column; align-items: center; gap: .25rem; }
+    .testimonial-avatar { width: 52px; height: 52px; background: rgba(255,255,255,.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: .5rem; }
+    .testimonial-name { font-weight: 700; color: #fff; }
+    .testimonial-role { font-size: .85rem; color: rgba(255,255,255,.7); }
+    .slider-controls { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: 2rem; }
+    .slider-btn { width: 44px; height: 44px; border-radius: 50%; border: 2px solid rgba(255,255,255,.4); background: transparent; color: #fff; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition); }
+    .slider-btn:hover { background: rgba(255,255,255,.2); border-color: #fff; }
+    .slider-dots { display: flex; gap: .5rem; }
+    .slider-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.4); cursor: pointer; transition: all var(--transition); border: none; }
+    .slider-dot.active { background: #fff; transform: scale(1.3); }
+
+    /* ── FAQ ─────────────────────────────────────────── */
+    #faq .faq-list { max-width: 780px; margin: 0 auto; display: flex; flex-direction: column; gap: .75rem; }
+    .faq-item { border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+    .faq-question {
+      width: 100%; display: flex; align-items: center; justify-content: space-between;
+      padding: 1.25rem 1.5rem; background: var(--card-bg);
+      font-size: 1rem; font-weight: 600; text-align: left;
+      border: none; cursor: pointer; color: var(--text);
+      transition: background var(--transition);
+    }
+    .faq-question:hover { background: var(--green-light); }
+    .faq-item.open .faq-question { background: var(--green-light); color: var(--green-dark); }
+    .faq-arrow { font-size: .8rem; transition: transform var(--transition); flex-shrink: 0; margin-left: 1rem; color: var(--green); }
+    .faq-item.open .faq-arrow { transform: rotate(180deg); }
+    .faq-answer { max-height: 0; overflow: hidden; transition: max-height .4s ease, padding .3s ease; background: var(--card-bg); }
+    .faq-item.open .faq-answer { max-height: 400px; }
+    .faq-answer-inner { padding: 0 1.5rem 1.25rem; font-size: .93rem; color: var(--text-muted); line-height: 1.7; border-top: 1px solid var(--border); padding-top: 1rem; }
+
+    /* ── Kontakt ─────────────────────────────────────── */
+    #kontakt .inner { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; }
+    .contact-form { background: var(--card-bg); border-radius: var(--radius); padding: 2.5rem; box-shadow: var(--shadow); }
+    .contact-form h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: 1.5rem; }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-group label { display: block; font-size: .88rem; font-weight: 600; color: var(--text-muted); margin-bottom: .4rem; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: .75rem 1rem;
+      border: 2px solid var(--border); border-radius: 10px;
+      font-family: inherit; font-size: .95rem;
+      background: var(--bg); color: var(--text);
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none; border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(45,125,70,.12);
+    }
+    .form-group input.error, .form-group textarea.error { border-color: #ef4444; }
+    .form-error { font-size: .8rem; color: #ef4444; margin-top: .3rem; display: none; }
+    .form-error.show { display: block; }
+    .form-group textarea { resize: vertical; min-height: 120px; }
+    .form-submit-wrap { display: flex; align-items: center; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap; }
+    .form-success {
+      display: none; padding: 1rem 1.25rem;
+      background: var(--green-light); border-radius: 10px;
+      color: var(--green-dark); font-size: .9rem; font-weight: 500;
+      border-left: 4px solid var(--green); margin-top: 1rem;
+    }
+    .form-success.show { display: block; }
+
+    .contact-info { display: flex; flex-direction: column; gap: 1.5rem; }
+    .contact-block { background: var(--card-bg); border-radius: var(--radius); padding: 1.75rem; box-shadow: var(--shadow); }
+    .contact-block h4 { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; }
+    .contact-item { display: flex; gap: .75rem; margin-bottom: .75rem; align-items: flex-start; font-size: .9rem; }
+    .contact-item .ci { flex-shrink: 0; }
+    .contact-item a { color: var(--green); font-weight: 500; }
+
+    /* ── Vorstand ────────────────────────────────────── */
+    .board-card { padding: 1.5rem; border-radius: var(--radius); background: var(--card-bg); box-shadow: var(--shadow); display: flex; gap: 1rem; align-items: flex-start; transition: all var(--transition); }
+    .board-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+    .board-avatar { width: 48px; height: 48px; background: var(--green-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+    .board-info { flex: 1; min-width: 0; }
+    .board-role { font-size: .75rem; font-weight: 600; color: var(--green); text-transform: uppercase; letter-spacing: .06em; }
+    .board-name { font-size: 1rem; font-weight: 700; margin: .2rem 0 .5rem; }
+    .board-contact a { display: flex; align-items: center; gap: .4rem; font-size: .82rem; color: var(--text-muted); transition: color var(--transition); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .board-contact a:hover { color: var(--green); }
+
+    /* ── Anfahrt ─────────────────────────────────────── */
+    #anfahrt .inner { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; }
+    .map-container { border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-lg); height: 400px; }
+    .map-container iframe { width: 100%; height: 100%; border: 0; }
+    .address-card { background: var(--card-bg); border-radius: var(--radius); padding: 2rem; box-shadow: var(--shadow); margin-bottom: 1.5rem; }
+    .address-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; }
+    .address-item { display: flex; gap: .75rem; margin-bottom: .75rem; align-items: flex-start; }
+    .address-item p { font-size: .9rem; color: var(--text-muted); }
+    .directions { display: flex; flex-direction: column; gap: .75rem; }
+    .direction-item { display: flex; gap: .75rem; padding: .75rem 1rem; background: var(--green-light); border-radius: 10px; font-size: .88rem; color: var(--text-muted); }
+
+    /* ── Mitglied werden ─────────────────────────────── */
+    #mitglied { background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%); color: #fff; }
+    #mitglied .section-label { color: var(--yellow); }
+    #mitglied .section-title { color: #fff; }
+    .mitglied-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
+    .benefit-list { display: flex; flex-direction: column; gap: .75rem; margin: 1.5rem 0 2rem; }
+    .benefit-item { display: flex; align-items: center; gap: 1rem; background: rgba(255,255,255,.1); padding: .9rem 1.2rem; border-radius: 10px; }
+    .benefit-item .b-icon { font-size: 1.3rem; }
+    .benefit-item p { font-size: .92rem; }
+    .pricing-box { background: rgba(255,255,255,.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,.2); border-radius: 20px; padding: 2.5rem; text-align: center; }
+    .pricing-box .label { font-size: .85rem; opacity: .8; margin-bottom: .5rem; }
+    .pricing-box .price { font-size: 3.5rem; font-weight: 800; line-height: 1; margin-bottom: .25rem; }
+    .pricing-box .price sub { font-size: 1rem; font-weight: 500; vertical-align: baseline; }
+    .pricing-box .desc { font-size: .9rem; opacity: .8; margin-bottom: 2rem; }
+    .pricing-box .features { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 2rem; text-align: left; }
+    .pricing-box .feature { display: flex; align-items: center; gap: .6rem; font-size: .9rem; }
+    .pricing-box .feature::before { content: "✓"; font-weight: 700; color: var(--yellow); }
+    .whatsapp-box { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); border-radius: 12px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem; margin-top: 1.5rem; }
+    .whatsapp-box .wa-icon { font-size: 2rem; flex-shrink: 0; }
+    .whatsapp-box p { font-size: .88rem; opacity: .85; }
+    .whatsapp-box a { color: var(--yellow); font-weight: 600; }
+
+    /* ── Footer ──────────────────────────────────────── */
+    footer { background: var(--gray-900); color: rgba(255,255,255,.7); padding: 4rem 0 2rem; }
+    [data-theme="dark"] footer { background: #020617; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr; gap: 3rem; margin-bottom: 3rem; }
+    .footer-brand .logo { color: #fff; margin-bottom: 1rem; }
+    .footer-brand p { font-size: .9rem; line-height: 1.7; }
+    footer h4 { color: #fff; font-size: .9rem; font-weight: 700; margin-bottom: 1rem; letter-spacing: .06em; text-transform: uppercase; }
+    footer ul { display: flex; flex-direction: column; gap: .5rem; }
+    footer ul a { font-size: .88rem; transition: color var(--transition); }
+    footer ul a:hover { color: #fff; }
+    .footer-contact li { display: flex; gap: .5rem; font-size: .88rem; margin-bottom: .5rem; }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,.08); padding-top: 1.5rem; display: flex; align-items: center; justify-content: space-between; font-size: .82rem; flex-wrap: wrap; gap: .5rem; }
+    .footer-bottom-links { display: flex; gap: 1.5rem; }
+    .footer-bottom-links a { font-size: .82rem; transition: color var(--transition); }
+    .footer-bottom-links a:hover { color: #fff; }
+
+    /* ── Back to Top ─────────────────────────────────── */
+    #back-to-top {
+      position: fixed; bottom: 2rem; right: 2rem; z-index: 900;
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--green); color: #fff;
+      border: none; cursor: pointer; font-size: 1.2rem;
+      box-shadow: 0 4px 16px rgba(45,125,70,.4);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transform: translateY(16px) scale(.9);
+      transition: all var(--transition); pointer-events: none;
+    }
+    #back-to-top.visible { opacity: 1; transform: none; pointer-events: auto; }
+    #back-to-top:hover { background: var(--green-dark); transform: translateY(-2px); }
+
+    /* ── Cookie Banner ───────────────────────────────── */
+    #cookie-banner {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
+      background: var(--gray-900); color: rgba(255,255,255,.9);
+      padding: 1.25rem 1.5rem;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+      transform: translateY(100%); transition: transform .4s ease;
+    }
+    [data-theme="dark"] #cookie-banner { background: #020617; border-top: 1px solid rgba(255,255,255,.1); }
+    #cookie-banner.show { transform: none; }
+    #cookie-banner p { font-size: .88rem; max-width: 700px; opacity: .85; }
+    #cookie-banner a { color: var(--yellow); }
+    .cookie-btns { display: flex; gap: .75rem; flex-wrap: wrap; }
+    .cookie-accept { background: var(--green); color: #fff; border: none; padding: .6rem 1.5rem; border-radius: 50px; font-size: .88rem; font-weight: 600; cursor: pointer; transition: background var(--transition); }
+    .cookie-accept:hover { background: var(--green-dark); }
+    .cookie-decline { background: transparent; color: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.3); padding: .6rem 1.2rem; border-radius: 50px; font-size: .88rem; cursor: pointer; transition: all var(--transition); }
+    .cookie-decline:hover { border-color: #fff; color: #fff; }
+
+    /* ── Lightbox ────────────────────────────────────── */
+    #lightbox {
+      position: fixed; inset: 0; z-index: 3000;
+      background: rgba(0,0,0,.9); display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity .3s ease;
+    }
+    #lightbox.open { opacity: 1; pointer-events: auto; }
+    .lightbox-content { text-align: center; color: #fff; padding: 2rem; max-width: 600px; }
+    .lightbox-emoji { font-size: 8rem; display: block; margin-bottom: 1rem; }
+    .lightbox-title { font-size: 1.2rem; font-weight: 600; opacity: .85; }
+    .lightbox-close { position: absolute; top: 1.5rem; right: 1.5rem; background: rgba(255,255,255,.15); border: none; color: #fff; width: 44px; height: 44px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background var(--transition); }
+    .lightbox-close:hover { background: rgba(255,255,255,.25); }
+
+    /* ── Animations ──────────────────────────────────── */
+    .fade-in { opacity: 0; transform: translateY(24px); transition: opacity .6s ease, transform .6s ease; }
+    .fade-in.visible { opacity: 1; transform: none; }
+
+    /* ── Responsive ──────────────────────────────────── */
+    @media (max-width: 900px) {
+      .nav-links { display: none; }
+      .hamburger { display: flex; }
+      #termine .inner, #trainer .inner, #anfahrt .inner, #kontakt .inner, .mitglied-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      #galerie .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+      .gallery-item:nth-child(1) { grid-column: span 2; }
+      .gallery-item:nth-child(4) { grid-column: span 1; }
+    }
+    @media (max-width: 600px) {
+      section { padding: 4rem 0; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .tennis-ball { display: none; }
+      .countdown-boxes { gap: .5rem; }
+      .countdown-box { min-width: 58px; padding: .6rem .9rem; }
+      .countdown-box .num { font-size: 1.6rem; }
+      .form-row { grid-template-columns: 1fr; }
+      #galerie .gallery-grid { grid-template-columns: 1fr 1fr; }
+      #cookie-banner { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Cookie Banner ── -->
+<div id="cookie-banner">
+  <p>Wir verwenden Cookies, um dein Erlebnis zu verbessern und Google Maps einzubetten. Weitere Infos in unserer <a href="https://www.tennis-bruvi.de/datenschutz/" target="_blank">Datenschutzerklärung</a>.</p>
+  <div class="cookie-btns">
+    <button class="cookie-accept" onclick="acceptCookies()">Alle akzeptieren</button>
+    <button class="cookie-decline" onclick="declineCookies()">Nur notwendige</button>
+  </div>
+</div>
+
+<!-- ── Lightbox ── -->
+<div id="lightbox" role="dialog" aria-modal="true" onclick="closeLightbox(event)">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <div class="lightbox-content">
+    <span class="lightbox-emoji" id="lb-emoji"></span>
+    <div class="lightbox-title" id="lb-title"></div>
+    <p style="margin-top:.75rem;font-size:.85rem;opacity:.6">Echte Fotos folgen bald – bleib gespannt!</p>
+  </div>
+</div>
+
+<!-- ── Navbar ── -->
+<nav class="navbar" id="navbar">
+  <div class="container">
+    <a href="#home" class="logo">
+      <div class="logo-icon">🎾</div>
+      <div><span>Tennis</span> <span style="color:var(--yellow)">BruVi</span></div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#aktuelles">Aktuelles</a></li>
+      <li><a href="#angebote">Training</a></li>
+      <li><a href="#termine">Termine</a></li>
+      <li><a href="#galerie">Galerie</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a href="#kontakt">Kontakt</a></li>
+      <li><a href="#mitglied" class="nav-cta">Mitglied werden</a></li>
+    </ul>
+    <div class="nav-right">
+      <button class="theme-toggle" id="theme-toggle" title="Dark/Light Mode">🌙</button>
+      <button class="hamburger" id="hamburger" aria-label="Menü öffnen"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Mobile Menu ── -->
+<div class="mobile-menu" id="mobile-menu">
+  <button class="mobile-close" id="close-menu">✕</button>
+  <a href="#aktuelles" onclick="closeMobileMenu()">Aktuelles</a>
+  <a href="#angebote" onclick="closeMobileMenu()">Training</a>
+  <a href="#termine" onclick="closeMobileMenu()">Termine</a>
+  <a href="#galerie" onclick="closeMobileMenu()">Galerie</a>
+  <a href="#faq" onclick="closeMobileMenu()">FAQ</a>
+  <a href="#kontakt" onclick="closeMobileMenu()">Kontakt</a>
+  <a href="#mitglied" onclick="closeMobileMenu()" style="background:var(--green);border-radius:50px;padding:.75rem 2rem">Mitglied werden</a>
+</div>
+
+<!-- ── Hero ── -->
+<section class="hero" id="home">
+  <div class="hero-bg"></div>
+  <svg class="tennis-ball" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="50" r="48" fill="white"/>
+    <path d="M50 2 C30 2 14 18 6 36 C18 42 26 56 26 70 C14 82 18 96 26 98 C38 96 48 90 50 86 C52 90 62 96 74 98 C82 96 86 82 74 70 C74 56 82 42 94 36 C86 18 70 2 50 2Z" fill="#c8f060" opacity="0.6"/>
+    <path d="M2 50 C2 30 18 14 36 6 C42 18 56 26 70 26 C82 14 96 18 98 26 C96 38 90 48 86 50 C90 52 96 62 98 74 C96 82 82 86 70 74 C56 74 42 82 36 94 C18 86 2 70 2 50Z" fill="#c8f060" opacity="0.3"/>
+  </svg>
+  <div class="container">
+    <div class="hero-badge"><span class="dot"></span> Sommersaison 2026 startet am 1. Mai</div>
+    <h1>Tennis spielen.<br /><em>Gemeinsam</em><br />besser werden.</h1>
+    <p>Willkommen beim Tennisclub Bruchhausen-Vilsen – Dein Verein im Vilser Holz seit über 50 Jahren. Training, Turniere und Gemeinschaft für alle Altersgruppen.</p>
+    <div class="hero-actions">
+      <a href="#mitglied" class="btn btn-primary">Jetzt Mitglied werden</a>
+      <a href="#angebote" class="btn btn-outline">Training entdecken</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><strong>50+</strong><span>Jahre Tennis in BruVi</span></div>
+      <div class="hero-stat"><strong>60+</strong><span>Kinder & Jugendliche</span></div>
+      <div class="hero-stat"><strong>1. Mai</strong><span>Saisonstart 2026</span></div>
+    </div>
+  </div>
+  <div class="scroll-indicator">
+    <span>Mehr entdecken</span>
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 12L2 6h12z"/></svg>
+  </div>
+</section>
+
+<!-- ── Countdown ── -->
+<div class="countdown-section">
+  <div class="container">
+    <div class="countdown-inner">
+      <div class="countdown-label">
+        <strong>Countdown zum Saisonstart</strong>
+        <span>Außenplätze öffnen am 1. Mai 2026</span>
+      </div>
+      <div class="countdown-boxes" id="countdown-boxes">
+        <div class="countdown-box"><span class="num" id="cd-days">--</span><span class="lbl">Tage</span></div>
+        <div class="countdown-box"><span class="num" id="cd-hours">--</span><span class="lbl">Std</span></div>
+        <div class="countdown-box"><span class="num" id="cd-min">--</span><span class="lbl">Min</span></div>
+        <div class="countdown-box"><span class="num" id="cd-sec">--</span><span class="lbl">Sek</span></div>
+      </div>
+      <div class="countdown-done" id="countdown-done">🎉 Die Saison ist eröffnet!</div>
+      <a href="https://www.bookandplay.de/cgi-bin/WebObjects/BookAndPlay.woa/wa/platz_buchen?id=TVN-307313" target="_blank" rel="noopener" class="btn btn-outline" style="white-space:nowrap">
+        Platz buchen →
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ── News Banner ── -->
+<div class="news-banner">
+  <div class="container">
+    <span class="news-tag">NEU</span>
+    <p class="news-text">Unser WhatsApp-Kanal ist online! Vereinsnews direkt aufs Handy.
+      <a href="https://whatsapp.com/channel/0029VbCrrCl7oQhi4hEdf32G" target="_blank" rel="noopener">Jetzt abonnieren →</a>
+    </p>
+  </div>
+</div>
+
+<!-- ── Aktuelles ── -->
+<section id="aktuelles">
+  <div class="container">
+    <div class="section-header fade-in">
+      <p class="section-label">Was ist los</p>
+      <h2 class="section-title">Aktuelles &amp; <span>Neuigkeiten</span></h2>
+      <p class="section-subtitle">Bleib auf dem Laufenden mit den neuesten Infos aus dem Vereinsleben.</p>
+    </div>
+    <div class="grid fade-in">
+      <div class="card news-card">
+        <div class="news-card-icon">🏗️</div>
+        <h3>Arbeitseinsatz Außenplätze</h3>
+        <p>Der Frühjahrsputz auf unseren Außenplätzen steht an! Alle Mitglieder sind herzlich eingeladen, beim Vorbereiten der Anlage auf die Sommersaison zu helfen.</p>
+        <div class="news-card-meta">
+          <strong>28. März 2026</strong><span>· 9:00 Uhr · Im Wiehe</span>
+        </div>
+      </div>
+      <div class="card news-card">
+        <div class="news-card-icon">📲</div>
+        <h3>Neuer WhatsApp-Kanal</h3>
+        <p>Der Verein hat einen offiziellen WhatsApp-Kanal eingerichtet. Dort werden aktuelle Infos, Beschlüsse und wichtige Neuigkeiten direkt weitergegeben.</p>
+        <div class="news-card-meta">
+          <strong><a href="https://whatsapp.com/channel/0029VbCrrCl7oQhi4hEdf32G" target="_blank" rel="noopener" style="color:var(--green)">Jetzt folgen →</a></strong>
+        </div>
+      </div>
+      <div class="card news-card">
+        <div class="news-card-icon">🏆</div>
+        <h3>Vereinsmeisterschaft 2026</h3>
+        <p>Es wird wieder eine Vereinsmeisterschaft geben! Das traditionelle Mixed-Turnier am letzten Sommerferientag findet ebenfalls statt – Details folgen bald.</p>
+        <div class="news-card-meta">
+          <strong>Sommer 2026</strong><span>· Details folgen</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Angebote / Training ── -->
+<section id="angebote" class="section-alt">
+  <div class="container">
+    <div class="section-header centered fade-in">
+      <p class="section-label">Für alle Altersgruppen</p>
+      <h2 class="section-title">Unsere <span>Trainingsangebote</span></h2>
+      <p class="section-subtitle">Egal ob Anfänger, Jugendlicher oder erfahrener Spieler – wir haben das passende Angebot für dich.</p>
+    </div>
+    <div class="grid fade-in">
+      <div class="offer-card">
+        <div class="offer-icon">👶</div>
+        <h3>Kinder &amp; Jugend</h3>
+        <p>Unser Trainer Christoph betreut jede Woche über 60 Kinder und Jugendliche altersgerecht und professionell.</p>
+        <ul class="offer-list">
+          <li>Ab Grundschulalter</li>
+          <li>Kleine Gruppen</li>
+          <li>Begleitung bei Turnieren</li>
+          <li>Punktspiele im Verband</li>
+        </ul>
+      </div>
+      <div class="offer-card featured">
+        <span class="offer-badge">Empfohlen</span>
+        <div class="offer-icon">🌟</div>
+        <h3>Starter-Mitgliedschaft</h3>
+        <p>Der perfekte Einstieg für Neueinsteiger – inklusive Trainerstunden, Schlägern und Bällen.</p>
+        <div class="offer-price">59 € <span>/ Person</span></div>
+        <ul class="offer-list">
+          <li>10 Trainerstunden in der Gruppe</li>
+          <li>Nutzung aller Außenplätze</li>
+          <li>Samstags in Kleingruppen</li>
+          <li>Schläger &amp; Bälle inklusive</li>
+          <li>Familienoption: 99 € für alle</li>
+        </ul>
+      </div>
+      <div class="offer-card">
+        <div class="offer-icon">🎯</div>
+        <h3>Erwachsenentraining</h3>
+        <p>Verschiedene Trainingsgruppen und Individualstunden für Erwachsene – nach Vereinbarung.</p>
+        <ul class="offer-list">
+          <li>Gruppentraining</li>
+          <li>Individualstunden</li>
+          <li>Schlaggerbespannung möglich</li>
+          <li>Probeschläger vorhanden</li>
+        </ul>
+      </div>
+      <div class="offer-card">
+        <div class="offer-icon">📅</div>
+        <h3>Platzbuchung</h3>
+        <p>Buche deinen Wunschplatz bequem online über das BookAndPlay-System.</p>
+        <ul class="offer-list">
+          <li>Online buchbar</li>
+          <li>Mehrere Außenplätze</li>
+          <li>Windgeschützte Lage</li>
+          <li>Im Vilser Holz</li>
+        </ul>
+        <div style="margin-top:1.25rem">
+          <a href="https://www.bookandplay.de/cgi-bin/WebObjects/BookAndPlay.woa/wa/platz_buchen?id=TVN-307313" target="_blank" rel="noopener" class="btn btn-outline-green" style="font-size:.88rem;padding:.6rem 1.2rem">Platz buchen →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Termine ── -->
+<section id="termine">
+  <div class="container">
+    <div class="section-header fade-in">
+      <p class="section-label">Saison 2026</p>
+      <h2 class="section-title">Wichtige <span>Termine</span></h2>
+    </div>
+    <div class="inner fade-in">
+      <div class="event-list">
+        <div class="event-item">
+          <div class="event-date"><strong>28</strong><span>März</span></div>
+          <div class="event-info">
+            <h4>Arbeitseinsatz Außenplätze</h4>
+            <p>Frühjahrsputz auf der Anlage im Wiehe</p>
+            <span class="event-tag green">9:00 Uhr · Im Wiehe</span>
+          </div>
+        </div>
+        <div class="event-item">
+          <div class="event-date"><strong>1</strong><span>Mai</span></div>
+          <div class="event-info">
+            <h4>Eröffnung Außensaison</h4>
+            <p>Offizieller Start in die Sommersaison 2026</p>
+            <span class="event-tag green">Saisonstart</span>
+          </div>
+        </div>
+        <div class="event-item">
+          <div class="event-date"><strong>Sommer</strong><span>2026</span></div>
+          <div class="event-info">
+            <h4>Vereinsmeisterschaft</h4>
+            <p>Alljährliche Vereinsmeisterschaft – Details folgen</p>
+            <span class="event-tag yellow">Termin folgt</span>
+          </div>
+        </div>
+        <div class="event-item">
+          <div class="event-date"><strong>Sep</strong><span>2026</span></div>
+          <div class="event-info">
+            <h4>Mixed-Turnier</h4>
+            <p>Traditionelles Turnier am letzten Sommerferientag (Birgit &amp; Jochen)</p>
+            <span class="event-tag yellow">Letzter Ferientag</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="padding:2rem;margin-bottom:1.25rem">
+          <div style="font-size:2rem;margin-bottom:1rem">📊</div>
+          <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:.5rem">Punktspielbetrieb</h3>
+          <p style="font-size:.9rem;color:var(--text-muted);margin-bottom:1.25rem">Aktuelles zum Verbandsspielbetrieb, Ranglisten und Spieltermine beim Tennisverband Niedersachsen.</p>
+          <a href="https://www.ntv.de" target="_blank" rel="noopener" class="btn btn-outline-green" style="font-size:.85rem;padding:.6rem 1.2rem;justify-content:center;display:flex">Verbandsseite →</a>
+        </div>
+        <div class="card" style="padding:2rem;background:var(--green);color:#fff">
+          <div style="font-size:2rem;margin-bottom:1rem">🔔</div>
+          <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:.5rem">Keine Termine verpassen</h3>
+          <p style="font-size:.9rem;opacity:.85;margin-bottom:1.25rem">Abonniere unseren WhatsApp-Kanal und erhalte alle wichtigen Infos direkt auf dein Handy.</p>
+          <a href="https://whatsapp.com/channel/0029VbCrrCl7oQhi4hEdf32G" target="_blank" rel="noopener" class="btn btn-outline" style="font-size:.85rem;padding:.6rem 1.2rem;width:100%;justify-content:center;display:flex">WhatsApp-Kanal folgen</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Galerie ── -->
+<section id="galerie" class="section-alt">
+  <div class="container">
+    <div class="section-header centered fade-in">
+      <p class="section-label">Bilder &amp; Impressionen</p>
+      <h2 class="section-title">Unser <span>Vereinsleben</span></h2>
+      <p class="section-subtitle">Einblicke in unsere Anlage, Turniere und das Vereinsleben im Vilser Holz.</p>
+    </div>
+    <div class="gallery-grid fade-in">
+      <div class="gallery-item" onclick="openLightbox('🎾','Unsere Tennisanlage Im Wiehe')">
+        <div class="gallery-inner">
+          <div class="gallery-placeholder" style="background:linear-gradient(135deg,#e8f5ed,#c3e6cb)">
+            🎾<span>Tennisanlage Im Wiehe</span>
+          </div>
+        </div>
+        <div class="gallery-overlay"><span class="gallery-overlay-icon">🔍</span></div>
+      </div>
+      <div class="gallery-item" onclick="openLightbox('🏆','Vereinsmeisterschaft')">
+        <div class="gallery-inner">
+          <div class="gallery-placeholder" style="background:linear-gradient(135deg,#fef9e7,#fce08d)">
+            🏆<span>Vereinsmeisterschaft</span>
+          </div>
+        </div>
+        <div class="gallery-overlay"><span class="gallery-overlay-icon">🔍</span></div>
+      </div>
+      <div class="gallery-item" onclick="openLightbox('👶','Kinder- &amp; Jugendtraining')">
+        <div class="gallery-inner">
+          <div class="gallery-placeholder" style="background:linear-gradient(135deg,#e0f2fe,#bae6fd)">
+            👶<span>Jugendtraining</span>
+          </div>
+        </div>
+        <div class="gallery-overlay"><span class="gallery-overlay-icon">🔍</span></div>
+      </div>
+      <div class="gallery-item" onclick="openLightbox('🎉','Mixed-Turnier')">
+        <div class="gallery-inner">
+          <div class="gallery-placeholder" style="background:linear-gradient(135deg,#fce7f3,#fbcfe8)">
+            🎉<span>Mixed-Turnier</span>
+          </div>
+        </div>
+        <div class="gallery-overlay"><span class="gallery-overlay-icon">🔍</span></div>
+      </div>
+      <div class="gallery-item" onclick="openLightbox('🌲','Vilser Holz – unser Zuhause')">
+        <div class="gallery-inner">
+          <div class="gallery-placeholder" style="background:linear-gradient(135deg,#dcfce7,#bbf7d0)">
+            🌲<span>Vilser Holz</span>
+          </div>
+        </div>
+        <div class="gallery-overlay"><span class="gallery-overlay-icon">🔍</span></div>
+      </div>
+      <div class="gallery-item" onclick="openLightbox('🤝','50 Jahre Tennis BruVi')">
+        <div class="gallery-inner">
+          <div class="gallery-placeholder" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe)">
+            🤝<span>50 Jahre Jubiläum</span>
+          </div>
+        </div>
+        <div class="gallery-overlay"><span class="gallery-overlay-icon">🔍</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Trainer ── -->
+<section id="trainer">
+  <div class="container">
+    <div class="inner fade-in">
+      <div class="trainer-card">
+        <div class="trainer-avatar">👨‍🏫</div>
+        <h3>Christoph Semrau</h3>
+        <p class="role">Vereinstrainer &amp; Jugendwart</p>
+        <div class="trainer-stat-row">
+          <div class="trainer-stat"><strong>60+</strong><span>Kinder pro Woche</span></div>
+          <div class="trainer-stat"><strong>DTB-C</strong><span>Trainerlizenz</span></div>
+        </div>
+        <ul class="trainer-info-list">
+          <li>🏅 DTB-C-Trainerlizenz (Leistungssport)</li>
+          <li>🏫 Staatl. anerkannter Erzieher</li>
+          <li>🎾 1. Herren TV Sykes (Verbandsliga)</li>
+          <li>📍 Regelmäßig auf der Anlage anzutreffen</li>
+        </ul>
+      </div>
+      <div class="trainer-text">
+        <p class="section-label">Dein Ansprechpartner</p>
+        <h2 class="section-title">Professionelles <span>Training</span> für alle</h2>
+        <p>Christoph Semrau trainiert jede Woche über 60 Kinder und Jugendliche und betreut sie als Jugendwart auch bei Punktspielen und Vereinsturnieren.</p>
+        <p>Zusätzlich bietet er verschiedene Erwachsenentrainingsgruppen sowie Individualstunden an. Schlaggerbespannung ist ebenfalls möglich.</p>
+        <div class="contact-chips">
+          <div class="chip">
+            <span>📞</span>
+            <div><div style="font-size:.75rem;color:var(--text-muted)">Telefon</div>
+            <a href="tel:01721787182" style="font-weight:600;color:var(--green-dark)">0172 / 1787182</a></div>
+          </div>
+          <div class="chip">
+            <span>✉️</span>
+            <div><div style="font-size:.75rem;color:var(--text-muted)">E-Mail</div>
+            <a href="mailto:christoph.semrau@gmail.com" style="font-weight:600;color:var(--green-dark)">christoph.semrau@gmail.com</a></div>
+          </div>
+        </div>
+        <div style="margin-top:2rem">
+          <a href="#kontakt" class="btn btn-primary">Training anfragen</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Testimonials ── -->
+<section id="testimonials">
+  <div class="container">
+    <div class="section-header centered fade-in">
+      <p class="section-label" style="color:var(--yellow)">Was Mitglieder sagen</p>
+      <h2 class="section-title" style="color:#fff">Stimmen aus <span style="color:var(--yellow)">unserem Verein</span></h2>
+    </div>
+    <div class="testimonials-slider fade-in">
+      <div class="testimonials-track" id="testimonials-track">
+        <div class="testimonial-slide">
+          <div class="testimonial-card">
+            <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+            <p class="testimonial-text">„Meine Kinder sind begeistert! Christoph ist ein fantastischer Trainer – geduldig, motivierend und immer mit viel Spaß dabei. Die Anlage im Vilser Holz ist ein echter Geheimtipp."</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">👩</div>
+              <div class="testimonial-name">Sabine K.</div>
+              <div class="testimonial-role">Mutter zweier Nachwuchsspieler</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-slide">
+          <div class="testimonial-card">
+            <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+            <p class="testimonial-text">„Über die Starter-Mitgliedschaft hab ich mit Tennis angefangen – das war eine super Entscheidung! Die Gruppe ist toll, und nach nur wenigen Wochen hatte ich schon die ersten Rallyes."</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">👨</div>
+              <div class="testimonial-name">Thomas B.</div>
+              <div class="testimonial-role">Neueinsteiger, Mitglied seit 2025</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-slide">
+          <div class="testimonial-card">
+            <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+            <p class="testimonial-text">„Das Mixed-Turnier am Ende der Sommerferien ist jedes Jahr ein Highlight! Tolle Atmosphäre, viel Spaß und ein wirklich familiärer Verein – man kennt und hilft sich gegenseitig."</p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">👩</div>
+              <div class="testimonial-name">Monika W.</div>
+              <div class="testimonial-role">Langjähriges Vereinsmitglied</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slider-controls">
+        <button class="slider-btn" onclick="slideTestimonial(-1)">◀</button>
+        <div class="slider-dots" id="slider-dots">
+          <button class="slider-dot active" onclick="goToSlide(0)"></button>
+          <button class="slider-dot" onclick="goToSlide(1)"></button>
+          <button class="slider-dot" onclick="goToSlide(2)"></button>
+        </div>
+        <button class="slider-btn" onclick="slideTestimonial(1)">▶</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Vorstand ── -->
+<section id="vorstand" class="section-alt">
+  <div class="container">
+    <div class="section-header centered fade-in">
+      <p class="section-label">Vereinsführung</p>
+      <h2 class="section-title">Unser <span>Vorstand</span></h2>
+      <p class="section-subtitle">Die Menschen, die unseren Verein am Laufen halten – für Fragen jederzeit ansprechbar.</p>
+    </div>
+    <div class="grid fade-in">
+      <div class="board-card">
+        <div class="board-avatar">💰</div>
+        <div class="board-info">
+          <div class="board-role">Kassenwart</div>
+          <div class="board-name">Robert Ehrenbruch</div>
+          <div class="board-contact">
+            <a href="tel:042523021">📞 04252 3021</a>
+            <a href="mailto:ehrenbruch@gmx.de">✉️ ehrenbruch@gmx.de</a>
+          </div>
+        </div>
+      </div>
+      <div class="board-card">
+        <div class="board-avatar">🏆</div>
+        <div class="board-info">
+          <div class="board-role">Sportwart</div>
+          <div class="board-name">Henning Huneke</div>
+          <div class="board-contact">
+            <a href="tel:04252515">📞 04252 515</a>
+            <a href="mailto:henning.hueneke@gmail.com">✉️ henning.hueneke@gmail.com</a>
+          </div>
+        </div>
+      </div>
+      <div class="board-card">
+        <div class="board-avatar">🎾</div>
+        <div class="board-info">
+          <div class="board-role">Jugendwart &amp; Trainer</div>
+          <div class="board-name">Christoph Semrau</div>
+          <div class="board-contact">
+            <a href="tel:01721787182">📞 0172 1787182</a>
+            <a href="mailto:christoph.semrau@gmail.com">✉️ christoph.semrau@gmail.com</a>
+          </div>
+        </div>
+      </div>
+      <div class="board-card">
+        <div class="board-avatar">📝</div>
+        <div class="board-info">
+          <div class="board-role">Schriftführerin</div>
+          <div class="board-name">Anke von Kuczkowski</div>
+          <div class="board-contact">
+            <a href="tel:01737400442">📞 0173 7400442</a>
+            <a href="mailto:avk@directbox.com">✉️ avk@directbox.com</a>
+          </div>
+        </div>
+      </div>
+      <div class="board-card">
+        <div class="board-avatar">🔧</div>
+        <div class="board-info">
+          <div class="board-role">Technikwartin</div>
+          <div class="board-name">Dörte Schröder</div>
+          <div class="board-contact">
+            <a href="tel:042522800">📞 04252 2800</a>
+            <a href="mailto:doerte.schroedersw2@gmail.com">✉️ doerte.schroedersw2@gmail.com</a>
+          </div>
+        </div>
+      </div>
+      <div class="board-card">
+        <div class="board-avatar">🌿</div>
+        <div class="board-info">
+          <div class="board-role">Platzwart</div>
+          <div class="board-name">Heinz Wiegmann</div>
+          <div class="board-contact">
+            <a href="tel:042523156">📞 04252 3156</a>
+            <a href="mailto:heinz-wiegmann@t-online.de">✉️ heinz-wiegmann@t-online.de</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FAQ ── -->
+<section id="faq">
+  <div class="container">
+    <div class="section-header centered fade-in">
+      <p class="section-label">Häufige Fragen</p>
+      <h2 class="section-title">FAQ &amp; <span>Antworten</span></h2>
+      <p class="section-subtitle">Die wichtigsten Fragen rund um Mitgliedschaft, Training und Anlage – kompakt beantwortet.</p>
+    </div>
+    <div class="faq-list fade-in">
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Wie kann ich Mitglied beim Tennis BruVi werden?
+          <span class="faq-arrow">▼</span>
+        </button>
+        <div class="faq-answer"><div class="faq-answer-inner">
+          Einfach Trainer Christoph Semrau kontaktieren: Tel. 0172 / 1787182 oder per E-Mail an christoph.semrau@gmail.com. Du kannst auch einfach auf die Anlage im Wiehe kommen und dich persönlich vorstellen. Die Starter-Mitgliedschaft kostet 59 € pro Person (Familie 99 €) und beinhaltet 10 Trainerstunden sowie Schläger und Bälle.
+        </div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Wie buche ich einen Platz?
+          <span class="faq-arrow">▼</span>
+        </button>
+        <div class="faq-answer"><div class="faq-answer-inner">
+          Platzbuchungen sind über das BookAndPlay-System online möglich – rund um die Uhr, einfach und bequem. Den Link findest du im Bereich „Training" auf dieser Seite oder direkt über den Button „Platz buchen".
+        </div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Wann beginnt die Außensaison?
+          <span class="faq-arrow">▼</span>
+        </button>
+        <div class="faq-answer"><div class="faq-answer-inner">
+          Die Außensaison startet planmäßig am 1. Mai 2026. Davor findet am 28. März der gemeinsame Arbeitseinsatz statt, um die Plätze fit zu machen. Bei schlechtem Wetter wird rechtzeitig Bescheid gegeben.
+        </div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Bietet der Verein Training für Kinder an?
+          <span class="faq-arrow">▼</span>
+        </button>
+        <div class="faq-answer"><div class="faq-answer-inner">
+          Ja! Vereinstrainer Christoph Semrau trainiert wöchentlich über 60 Kinder und Jugendliche. Das Training findet in kleinen Gruppen statt und ist altersgerecht aufgebaut. Als Jugendwart begleitet er die Nachwuchsspieler auch bei Punktspielen und Turnieren.
+        </div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Wo liegt die Tennisanlage und wie komme ich hin?
+          <span class="faq-arrow">▼</span>
+        </button>
+        <div class="faq-answer"><div class="faq-answer-inner">
+          Die Tennisanlage liegt windgeschützt im Vilser Holz. Für das Navi: Brunnenstraße 23, 27305 Bruchhausen-Vilsen. Aus Richtung Nienburg/Asendorf links in die Brunnenstraße abbiegen, aus Richtung Syke/Bremen rechts. Die Anlage liegt direkt an der Produktionsstätte von Vilser Brunnen – dort rechts in den kleinen Schotterweg abbiegen. Parkplatz ist vorhanden.
+        </div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Welche Turniere gibt es beim Tennis BruVi?
+          <span class="faq-arrow">▼</span>
+        </button>
+        <div class="faq-answer"><div class="faq-answer-inner">
+          Jährlich finden die Vereinsmeisterschaft sowie das traditionelle Mixed-Turnier am letzten Sommerferientag statt (organisiert von Birgit und Jochen). Zusätzlich nehmen unsere Mannschaften am Punktspielbetrieb des Niedersächsischen Tennis-Verbandes teil.
+        </div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Kontakt ── -->
+<section id="kontakt" class="section-alt">
+  <div class="container">
+    <div class="section-header fade-in">
+      <p class="section-label">Schreib uns</p>
+      <h2 class="section-title">Nimm <span>Kontakt</span> auf</h2>
+      <p class="section-subtitle">Fragen, Anmeldung oder einfach Hallo sagen – wir freuen uns auf deine Nachricht!</p>
+    </div>
+    <div class="inner fade-in">
+      <div class="contact-form">
+        <h3>✉️ Nachricht senden</h3>
+        <form id="contact-form" onsubmit="submitForm(event)" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="cf-name">Name *</label>
+              <input type="text" id="cf-name" placeholder="Max Mustermann" required />
+              <div class="form-error" id="err-name">Bitte gib deinen Namen ein.</div>
+            </div>
+            <div class="form-group">
+              <label for="cf-email">E-Mail *</label>
+              <input type="email" id="cf-email" placeholder="max@beispiel.de" required />
+              <div class="form-error" id="err-email">Bitte gib eine gültige E-Mail ein.</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="cf-subject">Betreff</label>
+            <select id="cf-subject">
+              <option value="">Bitte wählen …</option>
+              <option value="mitglied">Mitglied werden</option>
+              <option value="training">Training anfragen</option>
+              <option value="platz">Platzbuchung / Frage</option>
+              <option value="turnier">Turnier-Infos</option>
+              <option value="sonstiges">Sonstiges</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="cf-msg">Nachricht *</label>
+            <textarea id="cf-msg" placeholder="Deine Nachricht …" required></textarea>
+            <div class="form-error" id="err-msg">Bitte schreib eine Nachricht.</div>
+          </div>
+          <div class="form-group" style="display:flex;align-items:flex-start;gap:.75rem">
+            <input type="checkbox" id="cf-privacy" style="width:18px;height:18px;flex-shrink:0;margin-top:2px;accent-color:var(--green)" required />
+            <label for="cf-privacy" style="font-size:.88rem;color:var(--text-muted);font-weight:400">Ich habe die <a href="https://www.tennis-bruvi.de/datenschutz/" target="_blank" style="color:var(--green)">Datenschutzerklärung</a> gelesen und stimme der Verarbeitung meiner Daten zu. *</label>
+          </div>
+          <div class="form-error" id="err-privacy">Bitte stimme der Datenschutzerklärung zu.</div>
+          <div class="form-submit-wrap">
+            <button type="submit" class="btn btn-primary">Nachricht senden 📨</button>
+          </div>
+          <div class="form-success" id="form-success">
+            ✅ Vielen Dank für deine Nachricht! Wir melden uns bald bei dir.
+          </div>
+        </form>
+      </div>
+      <div class="contact-info">
+        <div class="contact-block">
+          <h4>📍 Vereinsadresse</h4>
+          <div class="contact-item"><span class="ci">🏠</span><p>Tennisanlage Im Wiehe<br />Brunnenstraße 23<br />27305 Bruchhausen-Vilsen</p></div>
+          <div class="contact-item"><span class="ci">✉️</span><p><a href="mailto:info@tennis-bruvi.de">info@tennis-bruvi.de</a></p></div>
+        </div>
+        <div class="contact-block">
+          <h4>👨‍🏫 Trainer &amp; Anmeldung</h4>
+          <div class="contact-item"><span class="ci">📞</span><p><a href="tel:01721787182">0172 / 1787182</a><br /><small style="color:var(--text-muted)">Christoph Semrau</small></p></div>
+          <div class="contact-item"><span class="ci">✉️</span><p><a href="mailto:christoph.semrau@gmail.com">christoph.semrau@gmail.com</a></p></div>
+        </div>
+        <div class="contact-block" style="background:var(--green);color:#fff">
+          <h4 style="color:#fff">💬 WhatsApp-Kanal</h4>
+          <p style="font-size:.9rem;opacity:.85;margin-bottom:1rem">Aktuelle Infos, Beschlüsse und Neuigkeiten – direkt aufs Handy.</p>
+          <a href="https://whatsapp.com/channel/0029VbCrrCl7oQhi4hEdf32G" target="_blank" rel="noopener" class="btn btn-outline" style="font-size:.88rem;padding:.6rem 1.2rem;width:100%;justify-content:center;display:flex">Kanal abonnieren</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Anfahrt ── -->
+<section id="anfahrt">
+  <div class="container">
+    <div class="section-header fade-in">
+      <p class="section-label">So findest du uns</p>
+      <h2 class="section-title">Unsere <span>Anlage</span></h2>
+      <p class="section-subtitle">Die Tennisanlage liegt windgeschützt im Vilser Holz – ein echter Geheimtipp!</p>
+    </div>
+    <div class="inner fade-in">
+      <div class="map-container">
+        <iframe id="google-map"
+          src="about:blank"
+          data-src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2460.0!2d9.0052!3d52.8281!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47b1a6b7a7a7a7a7%3A0x0!2sBrunnenstra%C3%9Fe+23%2C+27305+Bruchhausen-Vilsen!5e0!3m2!1sde!2sde!4v1711400000000"
+          loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+          title="Tennisanlage Im Wiehe, Bruchhausen-Vilsen">
+        </iframe>
+      </div>
+      <div>
+        <div class="address-card">
+          <h3>📍 Adresse &amp; Kontakt</h3>
+          <div class="address-item"><span style="flex-shrink:0">🏠</span><p><strong>Tennisanlage Im Wiehe</strong><br />Brunnenstraße 23<br />27305 Bruchhausen-Vilsen</p></div>
+          <div class="address-item"><span style="flex-shrink:0">✉️</span><p><a href="mailto:info@tennis-bruvi.de" style="color:var(--green);font-weight:500">info@tennis-bruvi.de</a></p></div>
+          <div class="address-item"><span style="flex-shrink:0">ℹ️</span><p style="font-size:.88rem;color:var(--text-muted)">Für die Navigation: Brunnenstraße 23 eingeben. Die Anlage liegt direkt an der Vilser Brunnen Produktionsstätte – dort rechts in den kleinen Schotterweg abbiegen.</p></div>
+        </div>
+        <h3 style="font-size:1rem;font-weight:700;margin-bottom:.75rem">🗺️ Anfahrtshinweise</h3>
+        <div class="directions">
+          <div class="direction-item"><span>⬅️</span><span>Aus Richtung <strong>Nienburg / Asendorf:</strong> Links in die Brunnenstraße (roter Radweg gegenüber rechts)</span></div>
+          <div class="direction-item"><span>➡️</span><span>Aus Richtung <strong>Syke / Bremen</strong> (vom Kreisel): Rechts in die Brunnenstraße (roter Radweg gegenüber links)</span></div>
+        </div>
+        <div style="margin-top:1.5rem">
+          <a href="https://maps.google.com/?q=Brunnenstra%C3%9Fe+23,+27305+Bruchhausen-Vilsen" target="_blank" rel="noopener" class="btn btn-outline-green">In Google Maps öffnen →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Mitglied werden ── -->
+<section id="mitglied">
+  <div class="container">
+    <div class="mitglied-grid fade-in">
+      <div>
+        <p class="section-label">Komm in unser Team</p>
+        <h2 class="section-title" style="color:#fff">Werde jetzt <span style="color:var(--yellow)">Mitglied</span></h2>
+        <p class="section-subtitle" style="color:rgba(255,255,255,.8)">Du kannst uns jederzeit auf der Anlage im Wiehe besuchen oder einen unserer Ansprechpartner kontaktieren.</p>
+        <div class="benefit-list">
+          <div class="benefit-item"><span class="b-icon">🎾</span><p>Zugang zu allen Außenplätzen auf der Anlage im Wiehe</p></div>
+          <div class="benefit-item"><span class="b-icon">👨‍🏫</span><p>Professionelles Training mit DTB-lizenziertem Trainer</p></div>
+          <div class="benefit-item"><span class="b-icon">🏆</span><p>Teilnahme an Vereinsmeisterschaft und Turnieren</p></div>
+          <div class="benefit-item"><span class="b-icon">👥</span><p>Teil einer aktiven Tennisgemeinschaft seit über 50 Jahren</p></div>
+        </div>
+        <a href="#kontakt" class="btn" style="background:var(--yellow);color:var(--gray-900);font-weight:700">Jetzt anmelden</a>
+        <div class="whatsapp-box">
+          <span class="wa-icon">💬</span>
+          <p>Über unseren <a href="https://whatsapp.com/channel/0029VbCrrCl7oQhi4hEdf32G" target="_blank" rel="noopener">WhatsApp-Kanal</a> bleibst du immer auf dem neuesten Stand!</p>
+        </div>
+      </div>
+      <div class="pricing-box">
+        <p class="label">Starter-Mitgliedschaft</p>
+        <div class="price">59 <sub>€</sub></div>
+        <p class="desc">pro Person · keine weiteren Kosten</p>
+        <div class="features">
+          <div class="feature">10 Trainerstunden in der Gruppe</div>
+          <div class="feature">Nutzung aller Außenplätze</div>
+          <div class="feature">Samstags in Kleingruppen</div>
+          <div class="feature">Schläger &amp; Bälle werden gestellt</div>
+          <div class="feature">Terminverschiebung nach Absprache</div>
+          <div class="feature">Familienoption: 99 € für alle</div>
+        </div>
+        <a href="tel:01721787182" class="btn" style="background:var(--yellow);color:var(--gray-900);font-weight:700;width:100%;justify-content:center">📞 0172 / 1787182</a>
+        <p style="margin-top:.75rem;font-size:.8rem;opacity:.7">Christoph Semrau · Vereinstrainer</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="#home" class="logo" style="display:inline-flex;margin-bottom:1rem">
+          <div class="logo-icon">🎾</div>
+          <div><span>Tennis</span> <span style="color:var(--yellow)">BruVi</span></div>
+        </a>
+        <p>Tennisclub Bruchhausen-Vilsen – Dein Verein im Vilser Holz. Seit über 50 Jahren Tennis, Gemeinschaft und Spaß am Sport für alle Generationen.</p>
+      </div>
+      <div>
+        <h4>Navigation</h4>
+        <ul>
+          <li><a href="#aktuelles">Aktuelles</a></li>
+          <li><a href="#angebote">Training</a></li>
+          <li><a href="#termine">Termine</a></li>
+          <li><a href="#galerie">Galerie</a></li>
+          <li><a href="#faq">FAQ</a></li>
+          <li><a href="#kontakt">Kontakt</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Verein</h4>
+        <ul>
+          <li><a href="#mitglied">Mitglied werden</a></li>
+          <li><a href="#vorstand">Vorstand</a></li>
+          <li><a href="https://www.bookandplay.de/cgi-bin/WebObjects/BookAndPlay.woa/wa/platz_buchen?id=TVN-307313" target="_blank" rel="noopener">Platz buchen</a></li>
+          <li><a href="https://whatsapp.com/channel/0029VbCrrCl7oQhi4hEdf32G" target="_blank" rel="noopener">WhatsApp-Kanal</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Kontakt</h4>
+        <ul class="footer-contact">
+          <li><span>📍</span> Brunnenstraße 23, 27305 Bruchhausen-Vilsen</li>
+          <li><span>✉️</span> <a href="mailto:info@tennis-bruvi.de" style="color:rgba(255,255,255,.7)">info@tennis-bruvi.de</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Tennis BruVi – Tennisclub Bruchhausen-Vilsen</span>
+      <div class="footer-bottom-links">
+        <a href="https://www.tennis-bruvi.de/impressum/" target="_blank" rel="noopener">Impressum</a>
+        <a href="https://www.tennis-bruvi.de/datenschutz/" target="_blank" rel="noopener">Datenschutz</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ── Back to Top ── -->
+<button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Nach oben">▲</button>
+
+<script>
+/* ── Navbar scroll ── */
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+  navbar.classList.toggle('scrolled', window.scrollY > 60);
+  document.getElementById('back-to-top').classList.toggle('visible', window.scrollY > 400);
+}, { passive: true });
+
+/* ── Mobile menu ── */
+const hamburger = document.getElementById('hamburger');
+const mobileMenu = document.getElementById('mobile-menu');
+hamburger.addEventListener('click', () => {
+  hamburger.classList.toggle('open');
+  mobileMenu.classList.toggle('open');
+  document.body.style.overflow = mobileMenu.classList.contains('open') ? 'hidden' : '';
+});
+document.getElementById('close-menu').addEventListener('click', closeMobileMenu);
+function closeMobileMenu() {
+  hamburger.classList.remove('open');
+  mobileMenu.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ── Dark Mode ── */
+const themeToggle = document.getElementById('theme-toggle');
+const html = document.documentElement;
+const savedTheme = localStorage.getItem('bruvi-theme') || 'light';
+html.setAttribute('data-theme', savedTheme);
+themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+themeToggle.addEventListener('click', () => {
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  const newTheme = isDark ? 'light' : 'dark';
+  html.setAttribute('data-theme', newTheme);
+  themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+  localStorage.setItem('bruvi-theme', newTheme);
+});
+
+/* ── Countdown ── */
+function updateCountdown() {
+  const target = new Date('2026-05-01T00:00:00');
+  const now = new Date();
+  const diff = target - now;
+  if (diff <= 0) {
+    document.getElementById('countdown-boxes').style.display = 'none';
+    document.getElementById('countdown-done').style.display = 'block';
+    return;
+  }
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+  document.getElementById('cd-days').textContent  = String(d).padStart(2,'0');
+  document.getElementById('cd-hours').textContent = String(h).padStart(2,'0');
+  document.getElementById('cd-min').textContent   = String(m).padStart(2,'0');
+  document.getElementById('cd-sec').textContent   = String(s).padStart(2,'0');
+}
+updateCountdown();
+setInterval(updateCountdown, 1000);
+
+/* ── FAQ Accordion ── */
+function toggleFaq(btn) {
+  const item = btn.parentElement;
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+  if (!isOpen) item.classList.add('open');
+}
+
+/* ── Testimonials Slider ── */
+let slideIndex = 0;
+const slides = document.querySelectorAll('.testimonial-slide');
+const dots = document.querySelectorAll('.slider-dot');
+function goToSlide(i) {
+  slideIndex = (i + slides.length) % slides.length;
+  document.getElementById('testimonials-track').style.transform = `translateX(-${slideIndex * 100}%)`;
+  dots.forEach((d, j) => d.classList.toggle('active', j === slideIndex));
+}
+function slideTestimonial(dir) { goToSlide(slideIndex + dir); }
+setInterval(() => slideTestimonial(1), 5000);
+
+/* ── Gallery Lightbox ── */
+function openLightbox(emoji, title) {
+  document.getElementById('lb-emoji').textContent = emoji;
+  document.getElementById('lb-title').textContent = title;
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox(e) {
+  if (!e || e.target === document.getElementById('lightbox') || e.currentTarget.classList.contains('lightbox-close')) {
+    document.getElementById('lightbox').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox({target: document.getElementById('lightbox')}); });
+
+/* ── Contact Form ── */
+function submitForm(e) {
+  e.preventDefault();
+  let valid = true;
+  const name    = document.getElementById('cf-name');
+  const email   = document.getElementById('cf-email');
+  const msg     = document.getElementById('cf-msg');
+  const privacy = document.getElementById('cf-privacy');
+  const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  [name, email, msg].forEach(f => { f.classList.remove('error'); });
+  ['err-name','err-email','err-msg','err-privacy'].forEach(id => document.getElementById(id).classList.remove('show'));
+
+  if (!name.value.trim())          { name.classList.add('error');  document.getElementById('err-name').classList.add('show');    valid = false; }
+  if (!emailRe.test(email.value))  { email.classList.add('error'); document.getElementById('err-email').classList.add('show');   valid = false; }
+  if (!msg.value.trim())           { msg.classList.add('error');   document.getElementById('err-msg').classList.add('show');     valid = false; }
+  if (!privacy.checked)            {                               document.getElementById('err-privacy').classList.add('show'); valid = false; }
+
+  if (!valid) return;
+
+  // Build mailto link
+  const subject = encodeURIComponent('Kontaktanfrage Tennis BruVi – ' + (document.getElementById('cf-subject').value || 'Allgemein'));
+  const body = encodeURIComponent(`Name: ${name.value}\nE-Mail: ${email.value}\n\nNachricht:\n${msg.value}`);
+  window.location.href = `mailto:info@tennis-bruvi.de?subject=${subject}&body=${body}`;
+
+  document.getElementById('form-success').classList.add('show');
+  document.getElementById('contact-form').reset();
+}
+
+/* ── Cookie Banner ── */
+function showCookieBanner() {
+  if (!localStorage.getItem('bruvi-cookies')) {
+    setTimeout(() => document.getElementById('cookie-banner').classList.add('show'), 1500);
+  } else if (localStorage.getItem('bruvi-cookies') === 'accepted') {
+    loadMap();
+  }
+}
+function acceptCookies() {
+  localStorage.setItem('bruvi-cookies', 'accepted');
+  document.getElementById('cookie-banner').classList.remove('show');
+  loadMap();
+}
+function declineCookies() {
+  localStorage.setItem('bruvi-cookies', 'declined');
+  document.getElementById('cookie-banner').classList.remove('show');
+}
+function loadMap() {
+  const map = document.getElementById('google-map');
+  if (map && map.dataset.src) {
+    map.src = map.dataset.src;
+    delete map.dataset.src;
+  }
+}
+showCookieBanner();
+
+/* ── Fade-in on scroll ── */
+const fadeEls = document.querySelectorAll('.fade-in');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry, i) => {
+    if (entry.isIntersecting) {
+      setTimeout(() => entry.target.classList.add('visible'), i * 80);
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+fadeEls.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
