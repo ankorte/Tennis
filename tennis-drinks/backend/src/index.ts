@@ -153,7 +153,25 @@ app.post('/api/backup/restore',
       fs.writeFileSync(dbPath, body);
       console.log(`[Restore] DB wiederhergestellt: ${body.length} Bytes geschrieben`);
 
-      // 5. Server neu starten (Azure startet den Prozess automatisch neu)
+      // 5. Integritätsprüfung
+      try {
+        const Database = require('better-sqlite3');
+        const testDb = new Database(dbPath, { readonly: true });
+        const check = testDb.pragma('integrity_check') as any[];
+        testDb.close();
+        if (check.length > 0 && check[0]?.integrity_check !== 'ok') {
+          // DB korrupt – Backup wiederherstellen
+          console.error('[Restore] Integritätsprüfung fehlgeschlagen:', check);
+          fs.copyFileSync(backupPath, dbPath);
+          res.status(400).json({ error: 'Datenbank-Integritätsprüfung fehlgeschlagen. Alte DB wiederhergestellt.' });
+          return;
+        }
+        console.log('[Restore] Integritätsprüfung bestanden');
+      } catch (intErr) {
+        console.error('[Restore] Integritätsprüfung-Fehler:', intErr);
+      }
+
+      // 5. Antwort senden, dann Server neu starten
       res.json({
         message: 'Datenbank wiederhergestellt. Server wird neu gestartet...',
         size: body.length,
@@ -164,7 +182,7 @@ app.post('/api/backup/restore',
       setTimeout(() => {
         console.log('=== Server-Neustart nach DB-Restore ===');
         process.exit(0);
-      }, 500);
+      }, 1000);
     } catch (err: any) {
       console.error('[Restore] Fehler:', err);
       res.status(500).json({ error: 'Restore fehlgeschlagen: ' + err.message });

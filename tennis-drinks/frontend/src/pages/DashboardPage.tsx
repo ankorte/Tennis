@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
+import { useToast } from '../components/Toast'
 import api from '../api'
 import { CATEGORY_LABELS } from '../types'
+import ConfirmModal from '../components/ConfirmModal'
 
 interface FavDrink {
   id: number; name: string; category: string; price: number; stock: number; unit: string; active: number; total_qty: number
@@ -12,6 +14,7 @@ interface FavDrink {
 export default function DashboardPage() {
   const { user, isThekenwart, isKassenwart, isAdmin } = useAuth()
   const { addItem } = useCart()
+  const { showToast } = useToast()
   const navigate = useNavigate()
   const [balance, setBalance] = useState<number>(0)
   const [dashboard, setDashboard] = useState<any>(null)
@@ -21,9 +24,10 @@ export default function DashboardPage() {
   const [showRestore, setShowRestore] = useState(false)
   const [restoring, setRestoring] = useState(false)
   const [lastBooking, setLastBooking] = useState<{ drink_name: string; quantity: number; total_price: number; created_at: string } | null>(null)
+  const [pendingRestoreFile, setPendingRestoreFile] = useState<File | null>(null)
 
   useEffect(() => {
-    api.get(`/members/${user!.id}/balance`).then(r => setBalance(r.data?.open_amount ?? 0)).catch(() => {})
+    api.get(`/members/${user!.id}/balance`).then(r => setBalance(r.data?.open_amount ?? 0)).catch(() => showToast('Kontostand konnte nicht geladen werden'))
     api.get('/bookings/favorites').then(r => {
       if (Array.isArray(r.data)) setFavorites(r.data)
     }).catch(() => {})
@@ -35,7 +39,7 @@ export default function DashboardPage() {
       }
     }).catch(() => {})
     if (isThekenwart) {
-      api.get('/billing/dashboard').then(r => { if (r.data && typeof r.data === 'object') setDashboard(r.data) }).catch(() => {})
+      api.get('/billing/dashboard').then(r => { if (r.data && typeof r.data === 'object') setDashboard(r.data) }).catch(() => showToast('Dashboard-Daten nicht verfügbar'))
       api.get('/inventory/low-stock').then(r => { if (Array.isArray(r.data)) setLowStock(r.data) }).catch(() => {})
     }
   }, [])
@@ -58,37 +62,35 @@ export default function DashboardPage() {
     }
   }
 
-  const handleRestore = async (file: File) => {
+  const handleRestoreFile = async (file: File) => {
     if (!file.name.endsWith('.db')) {
-      alert('Bitte eine .db Datei auswählen')
+      showToast('Bitte eine .db Datei auswählen')
       return
     }
     // SQLite Header prüfen (erste 16 Bytes)
     const headerBytes = await file.slice(0, 16).text()
     if (!headerBytes.startsWith('SQLite format 3')) {
-      alert('❌ Diese Datei ist keine gültige SQLite-Datenbank.')
+      showToast('❌ Diese Datei ist keine gültige SQLite-Datenbank.')
       return
     }
-    if (!window.confirm(
-      `⚠️ ACHTUNG: Die aktuelle Datenbank wird durch "${file.name}" (${(file.size / 1024).toFixed(0)} KB) ersetzt!\n\n` +
-      'Die aktuelle Datenbank wird vorher automatisch gesichert.\n' +
-      'Der Server wird danach neu gestartet.\n\n' +
-      'Wirklich fortfahren?'
-    )) return
+    setPendingRestoreFile(file)
+  }
 
+  const doRestore = async () => {
+    if (!pendingRestoreFile) return
+    setPendingRestoreFile(null)
     setRestoring(true)
     try {
       const formData = new FormData()
-      formData.append('file', file)
+      formData.append('file', pendingRestoreFile)
       const res = await api.post('/backup/restore', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 60000,
       })
-      alert(`✅ ${res.data.message}\n\nSicherungskopie: ${res.data.backup}\n\nDie Seite wird jetzt neu geladen.`)
-      // Warten bis Server neu gestartet ist, dann Seite neu laden
+      showToast(`✅ ${res.data.message} – Seite wird neu geladen...`)
       setTimeout(() => window.location.reload(), 3000)
     } catch (e: any) {
-      alert('❌ Fehler: ' + (e.response?.data?.error || e.message))
+      showToast('❌ Fehler: ' + (e.response?.data?.error || (e as any).message))
       setRestoring(false)
     }
   }
@@ -102,6 +104,16 @@ export default function DashboardPage() {
 
   return (
     <div className="p-4 max-w-lg mx-auto">
+      {pendingRestoreFile && (
+        <ConfirmModal
+          title="Datenbank wiederherstellen?"
+          message={`⚠️ Die aktuelle Datenbank wird durch "${pendingRestoreFile.name}" (${(pendingRestoreFile.size / 1024).toFixed(0)} KB) ersetzt!\n\nDie aktuelle Datenbank wird vorher automatisch gesichert. Der Server startet danach neu.\n\nWirklich fortfahren?`}
+          confirmLabel="Wiederherstellen"
+          danger
+          onConfirm={doRestore}
+          onCancel={() => setPendingRestoreFile(null)}
+        />
+      )}
       <div className="mt-2 mb-6">
         <h2 className="text-xl font-bold text-tennis-dark">Hallo, {user?.first_name}! 👋</h2>
         <p className="text-gray-500 text-sm">{user?.team || 'TV Bruvi – Sparte Tennis'}</p>
@@ -137,7 +149,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 gap-3 mb-6">
         <Link to="/book" className="card text-center hover:shadow-lg transition-shadow py-3">
           <div className="text-3xl mb-1">🍺</div>
-          <div className="font-bold text-tennis-dark text-sm">Getränk buchen</div>
+          <div className="font-bold text-tennis-dark text-sm">Getränk eintragen</div>
         </Link>
         <Link to="/my-bookings" className="card text-center hover:shadow-lg transition-shadow py-3">
           <div className="text-3xl mb-1">💳</div>
@@ -249,7 +261,7 @@ export default function DashboardPage() {
                   <input type="file" accept=".db" className="hidden" disabled={restoring}
                     onChange={e => {
                       const file = e.target.files?.[0]
-                      if (file) handleRestore(file)
+                      if (file) handleRestoreFile(file)
                       e.target.value = ''
                     }} />
                 </label>

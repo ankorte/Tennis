@@ -7,33 +7,55 @@ router.use(authenticate)
 
 // GET /api/cart/all – Alle offenen Warenkörbe (Admin/Kassenwart/Thekenwart)
 router.get('/all', requireRole('admin', 'kassenwart', 'thekenwart'), (_req: AuthRequest, res: Response) => {
-  const members = db.prepare(`
-    SELECT ci.member_id,
+  // Single-Query: alle Cart-Items mit Member + Drink Infos
+  const allItems = db.prepare(`
+    SELECT ci.member_id, ci.drink_id, ci.quantity, ci.updated_at,
            m.first_name || ' ' || m.last_name AS member_name,
            m.member_number,
-           COUNT(ci.id) AS item_count,
-           SUM(ci.quantity * d.price) AS total_price,
-           MAX(ci.updated_at) AS last_updated
+           d.name, d.price, d.category, d.unit
     FROM cart_items ci
     JOIN members m ON m.id = ci.member_id
     JOIN drinks d ON d.id = ci.drink_id
-    GROUP BY ci.member_id
-    ORDER BY last_updated DESC
-  `).all()
+    ORDER BY ci.updated_at DESC
+  `).all() as any[]
 
-  const result = (members as any[]).map(m => {
-    const items = db.prepare(`
-      SELECT ci.drink_id, ci.quantity, ci.updated_at,
-             d.name, d.price, d.category, d.unit
-      FROM cart_items ci
-      JOIN drinks d ON d.id = ci.drink_id
-      WHERE ci.member_id = ?
-      ORDER BY ci.updated_at DESC
-    `).all(m.member_id)
-    return { ...m, items }
+  // Gruppieren nach member_id
+  const grouped = new Map<number, any>()
+  for (const item of allItems) {
+    if (!grouped.has(item.member_id)) {
+      grouped.set(item.member_id, {
+        member_id: item.member_id,
+        member_name: item.member_name,
+        member_number: item.member_number,
+        item_count: 0,
+        total_price: 0,
+        last_updated: item.updated_at,
+        items: [],
+      })
+    }
+    const g = grouped.get(item.member_id)!
+    g.items.push({ drink_id: item.drink_id, quantity: item.quantity, updated_at: item.updated_at, name: item.name, price: item.price, category: item.category, unit: item.unit })
+    g.item_count += 1
+    g.total_price += item.quantity * item.price
+    if (item.updated_at > g.last_updated) g.last_updated = item.updated_at
+  }
+
+  res.json(Array.from(grouped.values()))
+})
+
+// GET /api/cart/daily-spending – Heutige Ausgaben + Tageslimit des eingeloggten Nutzers
+router.get('/daily-spending', (req: AuthRequest, res: Response) => {
+  const memberId = req.user!.id
+  const spending = db.prepare(`
+    SELECT COALESCE(SUM(total_price), 0) as today_total
+    FROM bookings
+    WHERE member_id = ? AND cancelled = 0 AND date(created_at) = date('now')
+  `).get(memberId) as any
+  const member = db.prepare('SELECT daily_limit FROM members WHERE id = ?').get(memberId) as any
+  res.json({
+    today_total: spending?.today_total || 0,
+    daily_limit: member?.daily_limit ?? null,
   })
-
-  res.json(result)
 })
 
 // GET /api/cart – Warenkorb des eingeloggten Nutzers laden

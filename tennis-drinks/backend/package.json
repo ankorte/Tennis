@@ -5,9 +5,7 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
-    "studio": "prisma studio",
-    "db:pull": "prisma db pull"
+    "start": "node dist/index.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -33,7 +31,6 @@
     "@types/node": "^20.11.5",
     "@types/nodemailer": "^7.0.11",
     "@types/qrcode": "^1.5.5",
-    "prisma": "^7.5.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.3.3"
   }

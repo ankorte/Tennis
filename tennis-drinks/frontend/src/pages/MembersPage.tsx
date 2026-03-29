@@ -19,7 +19,7 @@ const ROLE_LABELS: Record<string, string> = {
 const emptyForm = {
   member_number: '', first_name: '', last_name: '', email: '',
   phone: '', status: 'aktiv', role: 'mitglied', team: '', pin: '',
-  iban: '', bic: '', mandate_ref: '', mandate_date: '',
+  iban: '', bic: '', mandate_ref: '', mandate_date: '', daily_limit: '',
 }
 
 export default function MembersPage() {
@@ -92,6 +92,7 @@ export default function MembersPage() {
       bic: m.bic || '',
       mandate_ref: m.mandate_ref || '',
       mandate_date: m.mandate_date || '',
+      daily_limit: m.daily_limit != null ? String(m.daily_limit) : '',
     })
     setSaveError('')
     setPinResetResult(null)
@@ -335,6 +336,17 @@ export default function MembersPage() {
                           className="input-field font-mono text-sm" placeholder="auto" />
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                {/* Tageslimit */}
+                <div className="pt-2 border-t border-gray-100">
+                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 block">⚠️ Ausgabenlimit</label>
+                  <div>
+                    <label className="text-xs text-gray-400 mb-1 block">Tageslimit (€, leer = kein Limit)</label>
+                    <input value={editForm.daily_limit}
+                      onChange={e => setEditForm(f => ({ ...f, daily_limit: e.target.value }))}
+                      className="input-field" type="number" min="0" step="0.50" placeholder="z.B. 10.00 (für Jugendliche)" />
                   </div>
                 </div>
 

@@ -17,13 +17,12 @@ $pkg = Get-Content $pkgPath -Raw | ConvertFrom-Json
 $parts = $pkg.version -split '\.'
 $newVersion = "$($parts[0]).$($parts[1]).$([int]$parts[2] + 1)"
 $pkg.version = $newVersion
-# UTF-8 ohne BOM schreiben – manuelle JSON-Erzeugung um Powershell-Unicode-Escapes zu vermeiden
+# UTF-8 ohne BOM schreiben
 $jsonContent = @"
 {
   "name": "tv-bruvi-getraenke",
   "version": "$newVersion",
   "scripts": {
-    "build": "cd frontend && npm install && npm run build && cd ../backend && npm install && npm run build",
     "start": "bash startup.sh"
   },
   "engines": {
@@ -34,7 +33,7 @@ $jsonContent = @"
 [System.IO.File]::WriteAllText($pkgPath, $jsonContent, [System.Text.UTF8Encoding]::new($false))
 Write-Host ("Version: " + $newVersion) -ForegroundColor Cyan
 
-# --- Frontend lokal bauen (schneller als auf Azure) ---
+# --- Frontend lokal bauen ---
 Write-Host "Baue Frontend lokal..." -ForegroundColor Yellow
 $frontendDir = Join-Path $ProjectRoot "frontend"
 Push-Location $frontendDir
@@ -53,24 +52,44 @@ try {
     Pop-Location
 }
 
+# --- Backend lokal bauen (TypeScript -> JavaScript) ---
+Write-Host "Baue Backend lokal..." -ForegroundColor Yellow
+$backendDir = Join-Path $ProjectRoot "backend"
+Push-Location $backendDir
+$prevPref = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+try {
+    npm install --silent 2>&1 | Out-Null
+    npm run build 2>&1 | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        $ErrorActionPreference = $prevPref
+        throw "Backend build fehlgeschlagen (Exit-Code $LASTEXITCODE)"
+    }
+    # Version in dist merken
+    $newVersion | Out-File -FilePath "dist/.version" -Encoding utf8 -NoNewline
+    Write-Host "  Backend build OK" -ForegroundColor Green
+} finally {
+    $ErrorActionPreference = $prevPref
+    Pop-Location
+}
+
 if (Test-Path $ZipPath) { Remove-Item $ZipPath -Force }
 
-# Quell-Dateien fuer das ZIP
-$srcItems = @(
+# ZIP-Inhalt:
+# - startup.sh, package.json, .deployment, deploy-build.sh (Root)
+# - backend/dist/ (vorkompiliertes JS – kein TypeScript auf Azure noetig)
+# - backend/package.json (fuer npm install --omit=dev via deploy-build.sh)
+# - frontend/dist/ (vorkompiliertes Frontend)
+$allItems = @(
     "startup.sh",
     "package.json",
-    "backend/src",
+    ".deployment",
+    "deploy-build.sh",
+    "backend/dist",
     "backend/package.json",
-    "backend/tsconfig.json"
-)
-
-# Frontend: nur das fertige dist/ + noetige Config-Dateien
-$frontendItems = @(
     "frontend/dist",
     "frontend/public"
 )
-
-$allItems = $srcItems + $frontendItems
 
 Write-Host "Erstelle deploy.zip..." -ForegroundColor Yellow
 
@@ -116,7 +135,7 @@ if ($DeployNow) {
         --settings `
             NODE_ENV=production `
             "DB_PATH=/home/data/tennis.db" `
-            SCM_DO_BUILD_DURING_DEPLOYMENT=false | Out-Null
+            SCM_DO_BUILD_DURING_DEPLOYMENT=true | Out-Null
 
     Write-Host "Startup-Befehl setzen..." -ForegroundColor Yellow
     az webapp config set `
@@ -146,12 +165,12 @@ if ($DeployNow) {
     Write-Host "   az webapp create --resource-group <RG> --plan <PLAN> --name <APP> --runtime NODE:20-lts" -ForegroundColor Gray
     Write-Host ""
     Write-Host "2. App Settings + Startup-Command setzen (einmalig):" -ForegroundColor White
-    Write-Host "   az webapp config appsettings set --resource-group <RG> --name <APP> --settings NODE_ENV=production DB_PATH=/home/data/tennis.db" -ForegroundColor Gray
+    Write-Host "   az webapp config appsettings set --resource-group <RG> --name <APP> --settings NODE_ENV=production DB_PATH=/home/data/tennis.db SCM_DO_BUILD_DURING_DEPLOYMENT=true" -ForegroundColor Gray
     Write-Host "   az webapp config set --resource-group <RG> --name <APP> --startup-file ""bash /home/site/wwwroot/startup.sh""" -ForegroundColor Gray
     Write-Host "   az webapp update --resource-group <RG> --name <APP> --https-only true" -ForegroundColor Gray
     Write-Host ""
     Write-Host "3. ZIP deployen:" -ForegroundColor White
-    Write-Host "   az webapp deployment source config-zip --resource-group <RG> --name <APP> --src deploy.zip" -ForegroundColor Gray
+    Write-Host "   az webapp deploy --resource-group <RG> --name <APP> --src-path deploy.zip --type zip" -ForegroundColor Gray
     Write-Host ""
     Write-Host "   Oder alles in einem:" -ForegroundColor White
     Write-Host "   .\deploy.ps1 -ResourceGroup <RG> -AppName <APP> -DeployNow" -ForegroundColor Yellow

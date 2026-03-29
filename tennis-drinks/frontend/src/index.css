@@ -100,3 +100,59 @@ body {
 .focus\:border-tennis-green:focus { border-color: var(--bruvi-red) !important; }
 .accent-tennis-green { accent-color: var(--bruvi-red); }
 .ring-tennis-green { --tw-ring-color: var(--bruvi-red); }
+
+/* ── Toast Animation ──────────────────────────────── */
+@keyframes slide-in { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+.animate-slide-in { animation: slide-in 0.25s ease-out; }
+
+/* ── Skeleton Loader ─────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
+/* ── Dark Mode ───────────────────────────────────── */
+.dark body { background: #0F172A; color: #CBD5E1; }
+.dark .card { background: #1E293B; box-shadow: 0 2px 8px rgba(0,0,0,0.4); color: #E2E8F0; }
+.dark .input-field {
+  background: #1E293B;
+  border-color: #334155;
+  color: #E2E8F0;
+}
+.dark .input-field:focus { border-color: var(--bruvi-red); }
+.dark .btn-secondary {
+  background: #1E293B;
+  color: #E2E8F0;
+  border-color: #334155;
+}
+.dark .bg-gray-50 { background: #1E293B !important; }
+.dark .bg-gray-100 { background: #334155 !important; }
+.dark .bg-gray-200 { background: #475569 !important; }
+.dark .bg-white { background: #1E293B !important; }
+.dark .text-gray-500 { color: #94A3B8 !important; }
+.dark .text-gray-600 { color: #94A3B8 !important; }
+.dark .text-gray-400 { color: #64748B !important; }
+.dark .text-gray-700 { color: #CBD5E1 !important; }
+.dark .text-gray-800 { color: #E2E8F0 !important; }
+.dark .border-gray-200 { border-color: #334155 !important; }
+.dark .border-t { border-color: #334155 !important; }
+.dark .skeleton {
+  background: linear-gradient(90deg, #1E293B 25%, #334155 50%, #1E293B 75%);
+  background-size: 800px 100%;
+}
+/* Dark mode bottom nav */
+.dark nav.fixed { background: #1E293B !important; border-color: #E8002D !important; }
+
+/* ── Print / PDF-Export ──────────────────────────── */
+@media print {
+  header, nav, .no-print { display: none !important; }
+  body { background: white !important; color: black !important; }
+  .card { box-shadow: none !important; border: 1px solid #e5e7eb !important; break-inside: avoid; }
+  .print-only { display: block !important; }
+}

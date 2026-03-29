@@ -41,26 +41,37 @@ router.post('/', (req: AuthRequest, res: Response) => {
   const { drink_id, member_id, group_id, quantity, booking_type, guest_note } = req.body;
   if (!drink_id) { res.status(400).json({ error: 'Getränk fehlt' }); return; }
 
-  const drink = db.prepare('SELECT * FROM drinks WHERE id = ? AND active = 1').get(drink_id) as any;
-  if (!drink) { res.status(404).json({ error: 'Getränk nicht gefunden' }); return; }
-  if (drink.stock <= 0) { res.status(400).json({ error: 'Getränk nicht auf Lager' }); return; }
+  const qty = Math.max(1, Math.floor(Number(quantity) || 1));
+  if (qty > 100) { res.status(400).json({ error: 'Maximale Menge: 100' }); return; }
 
-  const qty = Math.max(1, parseInt(quantity) || 1);
-  const total = parseFloat((drink.price * qty).toFixed(2));
   const type = booking_type || (group_id ? 'gruppe' : 'einzeln');
   const status = group_id ? 'offen_gruppe' : 'bestaetigt';
   const targetMember = member_id || (group_id ? null : req.user!.id);
 
-  const result = db.prepare(`
-    INSERT INTO bookings (drink_id, member_id, group_id, quantity, unit_price, total_price, booking_type, status, guest_note, created_by)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(drink_id, targetMember, group_id || null, qty, drink.price, total, type, status, guest_note || null, req.user!.id);
+  // Transaktion: Bestand prüfen + buchen + abziehen atomar
+  try {
+    const result = db.transaction(() => {
+      const drink = db.prepare('SELECT * FROM drinks WHERE id = ? AND active = 1').get(drink_id) as any;
+      if (!drink) throw new Error('Getränk nicht gefunden');
+      if (drink.stock < qty) throw new Error(`Nur noch ${drink.stock} auf Lager`);
 
-  // Reduce stock
-  db.prepare(`UPDATE drinks SET stock = stock - ?, updated_at = datetime('now') WHERE id = ?`).run(qty, drink_id);
-  db.prepare(`INSERT INTO inventory_movements (drink_id, movement_type, quantity, comment, created_by) VALUES (?, 'verbrauch', ?, ?, ?)`).run(drink_id, -qty, `Buchung #${result.lastInsertRowid}`, req.user!.id);
+      const total = parseFloat((drink.price * qty).toFixed(2));
 
-  res.json({ id: result.lastInsertRowid, message: 'Buchung gespeichert', total_price: total });
+      const ins = db.prepare(`
+        INSERT INTO bookings (drink_id, member_id, group_id, quantity, unit_price, total_price, booking_type, status, guest_note, created_by)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(drink_id, targetMember, group_id || null, qty, drink.price, total, type, status, guest_note || null, req.user!.id);
+
+      db.prepare(`UPDATE drinks SET stock = stock - ?, updated_at = datetime('now') WHERE id = ?`).run(qty, drink_id);
+      db.prepare(`INSERT INTO inventory_movements (drink_id, movement_type, quantity, comment, created_by) VALUES (?, 'verbrauch', ?, ?, ?)`).run(drink_id, -qty, `Buchung #${ins.lastInsertRowid}`, req.user!.id);
+
+      return { id: ins.lastInsertRowid, total_price: total };
+    })();
+
+    res.json({ id: result.id, message: 'Buchung gespeichert', total_price: result.total_price });
+  } catch (e: any) {
+    res.status(400).json({ error: e.message || 'Buchung fehlgeschlagen' });
+  }
 });
 
 // Favoriten: Top-3 meistgebuchte Getränke des Nutzers

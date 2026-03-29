@@ -147,6 +147,22 @@ export function initializeDatabase(): void {
     );
   `);
 
+  // Performance-Indizes
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_bookings_member ON bookings(member_id);
+    CREATE INDEX IF NOT EXISTS idx_bookings_created_by ON bookings(created_by);
+    CREATE INDEX IF NOT EXISTS idx_bookings_drink ON bookings(drink_id);
+    CREATE INDEX IF NOT EXISTS idx_bookings_created_at ON bookings(created_at);
+    CREATE INDEX IF NOT EXISTS idx_bookings_cancelled ON bookings(cancelled);
+    CREATE INDEX IF NOT EXISTS idx_billings_member ON billings(member_id);
+    CREATE INDEX IF NOT EXISTS idx_billings_status ON billings(status);
+    CREATE INDEX IF NOT EXISTS idx_cart_items_member ON cart_items(member_id);
+    CREATE INDEX IF NOT EXISTS idx_inventory_drink ON inventory_movements(drink_id);
+    CREATE INDEX IF NOT EXISTS idx_distributions_member ON distributions(member_id);
+    CREATE INDEX IF NOT EXISTS idx_distributions_booking ON distributions(booking_id);
+    CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_log(entity_type, entity_id);
+  `);
+
   // Migrations – add columns that may not exist yet
   try { db.exec(`ALTER TABLE groups ADD COLUMN is_template INTEGER NOT NULL DEFAULT 0`) } catch {}
   // SEPA-Felder für Mitglieder
@@ -154,6 +170,115 @@ export function initializeDatabase(): void {
   try { db.exec(`ALTER TABLE members ADD COLUMN bic TEXT`) } catch {}
   try { db.exec(`ALTER TABLE members ADD COLUMN mandate_ref TEXT`) } catch {}
   try { db.exec(`ALTER TABLE members ADD COLUMN mandate_date TEXT`) } catch {}
+  // Getränkebilder
+  try { db.exec(`ALTER TABLE drinks ADD COLUMN image_url TEXT`) } catch {}
+  // Tages-Limit pro Mitglied (nullable = kein Limit)
+  try { db.exec(`ALTER TABLE members ADD COLUMN daily_limit REAL`) } catch {}
+
+  // Migration: FK-Referenzen auf members_old reparieren (Folge der Email-UNIQUE-Migration)
+  // SQLite aktualisiert bei RENAME TABLE automatisch FK-Referenzen in anderen Tabellen –
+  // nach dem Löschen von members_old zeigen diese FK-Referenzen ins Leere.
+  try {
+    const brokenTable = db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND sql LIKE '%members_old%'`).get() as any;
+    if (brokenTable) {
+      console.log('Migration: Repariere gebrochene FK-Referenzen auf members_old...');
+      db.exec('PRAGMA foreign_keys = OFF');
+      db.exec('BEGIN TRANSACTION');
+
+      const fixTable = (name: string, createSQL: string) => {
+        db.exec(`ALTER TABLE ${name} RENAME TO _${name}_bak`);
+        db.exec(createSQL);
+        db.exec(`INSERT INTO ${name} SELECT * FROM _${name}_bak`);
+        db.exec(`DROP TABLE _${name}_bak`);
+      };
+
+      fixTable('cart_items', `CREATE TABLE cart_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        member_id INTEGER NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+        drink_id INTEGER NOT NULL REFERENCES drinks(id) ON DELETE CASCADE,
+        quantity INTEGER NOT NULL DEFAULT 1,
+        updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+        UNIQUE(member_id, drink_id)
+      )`);
+      fixTable('groups', `CREATE TABLE groups (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        group_type TEXT NOT NULL DEFAULT 'spontan' CHECK(group_type IN ('spontan','mannschaft','event','sonstiges')),
+        event_date TEXT,
+        created_by INTEGER NOT NULL REFERENCES members(id),
+        status TEXT NOT NULL DEFAULT 'offen' CHECK(status IN ('offen','in_verteilung','abgeschlossen','storniert')),
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        is_template INTEGER NOT NULL DEFAULT 0
+      )`);
+      fixTable('group_members', `CREATE TABLE group_members (
+        group_id INTEGER NOT NULL REFERENCES groups(id),
+        member_id INTEGER NOT NULL REFERENCES members(id),
+        PRIMARY KEY (group_id, member_id)
+      )`);
+      fixTable('bookings', `CREATE TABLE bookings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        drink_id INTEGER NOT NULL REFERENCES drinks(id),
+        member_id INTEGER REFERENCES members(id),
+        group_id INTEGER REFERENCES groups(id),
+        quantity INTEGER NOT NULL DEFAULT 1,
+        unit_price REAL NOT NULL,
+        total_price REAL NOT NULL,
+        booking_type TEXT NOT NULL DEFAULT 'einzeln' CHECK(booking_type IN ('einzeln','gruppe','gast','manuell','admin')),
+        status TEXT NOT NULL DEFAULT 'bestaetigt' CHECK(status IN ('neu','bestaetigt','offen_gruppe','verteilt','storniert','abgerechnet')),
+        guest_note TEXT,
+        created_by INTEGER NOT NULL REFERENCES members(id),
+        cancelled INTEGER NOT NULL DEFAULT 0,
+        cancel_ref INTEGER REFERENCES bookings(id),
+        billing_id INTEGER,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )`);
+      fixTable('distributions', `CREATE TABLE distributions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        booking_id INTEGER NOT NULL REFERENCES bookings(id),
+        member_id INTEGER NOT NULL REFERENCES members(id),
+        quantity REAL NOT NULL DEFAULT 0,
+        amount REAL NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )`);
+      fixTable('inventory_movements', `CREATE TABLE inventory_movements (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        drink_id INTEGER NOT NULL REFERENCES drinks(id),
+        movement_type TEXT NOT NULL CHECK(movement_type IN ('verbrauch','wareneingang','korrektur','inventur','storno')),
+        quantity INTEGER NOT NULL,
+        comment TEXT,
+        created_by INTEGER NOT NULL REFERENCES members(id),
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )`);
+      fixTable('billings', `CREATE TABLE billings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        period_from TEXT NOT NULL,
+        period_to TEXT NOT NULL,
+        member_id INTEGER NOT NULL REFERENCES members(id),
+        total_amount REAL NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'offen' CHECK(status IN ('offen','erstellt','bezahlt','teilweise_bezahlt')),
+        exported_at TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )`);
+      fixTable('audit_log', `CREATE TABLE audit_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        entity_type TEXT NOT NULL,
+        entity_id INTEGER NOT NULL,
+        action TEXT NOT NULL,
+        old_value TEXT,
+        new_value TEXT,
+        created_by INTEGER REFERENCES members(id),
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )`);
+
+      db.exec('COMMIT');
+      db.exec('PRAGMA foreign_keys = ON');
+      console.log('Migration: FK-Referenzen erfolgreich repariert.');
+    }
+  } catch (e) {
+    console.error('FK-Reparatur Migration FEHLER:', e);
+    try { db.exec('ROLLBACK') } catch {}
+    try { db.exec('PRAGMA foreign_keys = ON') } catch {}
+  }
 
   // Migration: Login per Vorname+Nachname statt E-Mail
   // - Email UNIQUE entfernen (erlaubt doppelte E-Mails)

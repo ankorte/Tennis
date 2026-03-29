@@ -38,6 +38,7 @@ export interface Member {
   bic?: string
   mandate_ref?: string
   mandate_date?: string
+  daily_limit?: number | null
 }
 
 export interface Booking {

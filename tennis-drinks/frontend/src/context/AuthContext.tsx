@@ -13,12 +13,30 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>(null!)
 
+function isTokenValid(tok: string | null): boolean {
+  if (!tok) return false
+  try {
+    const payload = JSON.parse(atob(tok.split('.')[1]))
+    return payload.exp * 1000 > Date.now()
+  } catch { return false }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
+    const tok = localStorage.getItem('token')
+    if (!isTokenValid(tok)) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      return null
+    }
     const u = localStorage.getItem('user')
     return u ? JSON.parse(u) : null
   })
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'))
+  const [token, setToken] = useState<string | null>(() => {
+    const tok = localStorage.getItem('token')
+    if (!isTokenValid(tok)) return null
+    return tok
+  })
 
   const login = (tok: string, u: User) => {
     localStorage.setItem('token', tok)

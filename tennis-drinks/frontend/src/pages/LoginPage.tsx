@@ -208,7 +208,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <p className="text-white/40 text-xs mt-6">© TV Bruchhausen-Vilsen v. 1863 e.V.</p>
+      <p className="text-white/40 text-xs mt-6">© TV Bruchhausen-Vilsen v. 1863 e.V. · v{__APP_VERSION__}</p>
     </div>
   )
 }

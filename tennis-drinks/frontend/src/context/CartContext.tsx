@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 import type { Drink } from '../types'
 import api from '../api'
 import { useOnlineStatus } from '../hooks/useOnlineStatus'
+import { useToast } from '../components/Toast'
 
 export interface CartItem {
   drink: Drink
@@ -41,6 +42,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(loadLocal)
   const [cartLoading, setCartLoading] = useState(false)
   const isOnline = useOnlineStatus()
+  const { showToast } = useToast()
   const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const initialLoadDone = useRef(false)
 
@@ -52,6 +54,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setCartLoading(true)
       const { data } = await api.get('/cart')
       // Server-Antwort: [{drink_id, quantity, name, price, category, stock, unit, article_number, active}]
+      const inactiveItems = data.filter((r: any) => r.active === 0)
       const serverItems: CartItem[] = data
         .filter((r: any) => r.active !== 0)
         .map((r: any) => ({
@@ -67,6 +70,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           } as Drink,
           quantity: r.quantity,
         }))
+      if (inactiveItems.length > 0) {
+        const names = inactiveItems.map((r: any) => r.name).join(', ')
+        showToast(
+          `${inactiveItems.length} Getränk${inactiveItems.length > 1 ? 'e' : ''} nicht mehr verfügbar und aus deinem Warenkorb entfernt: ${names}`,
+          'info'
+        )
+      }
       setItems(serverItems)
       saveLocal(serverItems)
     } catch {
@@ -74,7 +84,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setCartLoading(false)
     }
-  }, [isOnline])
+  }, [isOnline, showToast])
 
   // Beim Start einmalig vom Server laden
   useEffect(() => {

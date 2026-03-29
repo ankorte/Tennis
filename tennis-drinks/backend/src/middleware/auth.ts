@@ -1,7 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'tennis-club-secret-2024';
+// JWT Secret: aus Umgebungsvariable oder auto-generiert (persistent pro Instanz)
+const JWT_SECRET = process.env.JWT_SECRET || (() => {
+  const generated = crypto.randomBytes(32).toString('hex');
+  console.warn('⚠️  Kein JWT_SECRET gesetzt – auto-generiert. Setze JWT_SECRET in Umgebungsvariablen für stabile Sessions!');
+  return generated;
+})();
 
 export interface AuthRequest extends Request {
   user?: { id: number; role: string; member_number: string };

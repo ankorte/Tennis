@@ -26,15 +26,21 @@ router.get('/:id/qrcode', async (req: AuthRequest, res: Response) => {
 });
 
 router.post('/', requireRole('admin', 'thekenwart', 'kassenwart'), (req: AuthRequest, res: Response) => {
-  const { article_number, name, category, price, purchase_price, stock, min_stock, unit, deposit, vat_rate } = req.body;
+  const { article_number, name, category, price, purchase_price, stock, min_stock, unit, deposit, vat_rate, image_url } = req.body;
   if (!article_number || !name || !category || price == null) {
     res.status(400).json({ error: 'Pflichtfelder fehlen' }); return;
   }
+  if (!Number.isFinite(Number(price)) || Number(price) < 0) {
+    res.status(400).json({ error: 'Ungültiger Preis' }); return;
+  }
+  if (stock != null && (!Number.isFinite(Number(stock)) || Number(stock) < 0)) {
+    res.status(400).json({ error: 'Ungültiger Bestand' }); return;
+  }
   try {
     const result = db.prepare(`
-      INSERT INTO drinks (article_number, name, category, price, purchase_price, stock, min_stock, unit, deposit, vat_rate)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(article_number, name, category, price, purchase_price || null, stock || 0, min_stock || 5, unit || 'Flasche', deposit || 0, vat_rate || 19.0);
+      INSERT INTO drinks (article_number, name, category, price, purchase_price, stock, min_stock, unit, deposit, vat_rate, image_url)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(article_number, name, category, price, purchase_price || null, stock || 0, min_stock || 5, unit || 'Flasche', deposit || 0, vat_rate || 19.0, image_url || null);
     res.json({ id: result.lastInsertRowid, message: 'Getränk angelegt' });
   } catch (e: any) {
     res.status(400).json({ error: e.message });
@@ -44,11 +50,20 @@ router.post('/', requireRole('admin', 'thekenwart', 'kassenwart'), (req: AuthReq
 router.put('/:id', requireRole('admin', 'thekenwart', 'kassenwart'), (req: AuthRequest, res: Response) => {
   const drink = db.prepare('SELECT * FROM drinks WHERE id = ?').get(req.params.id) as any;
   if (!drink) { res.status(404).json({ error: 'Getränk nicht gefunden' }); return; }
-  const { name, category, price, purchase_price, stock, min_stock, unit, active, deposit, vat_rate } = req.body;
+  const { name, category, price, purchase_price, stock, min_stock, unit, active, deposit, vat_rate, image_url } = req.body;
   db.prepare(`
-    UPDATE drinks SET name=?, category=?, price=?, purchase_price=?, stock=?, min_stock=?, unit=?, active=?, deposit=?, vat_rate=?, updated_at=datetime('now')
+    UPDATE drinks SET name=?, category=?, price=?, purchase_price=?, stock=?, min_stock=?, unit=?, active=?, deposit=?, vat_rate=?, image_url=?, updated_at=datetime('now')
     WHERE id=?
-  `).run(name ?? drink.name, category ?? drink.category, price ?? drink.price, purchase_price ?? drink.purchase_price, stock ?? drink.stock, min_stock ?? drink.min_stock, unit ?? drink.unit, active ?? drink.active, deposit ?? drink.deposit, vat_rate ?? drink.vat_rate, req.params.id);
+  `).run(name ?? drink.name, category ?? drink.category, price ?? drink.price, purchase_price ?? drink.purchase_price, stock ?? drink.stock, min_stock ?? drink.min_stock, unit ?? drink.unit, active ?? drink.active, deposit ?? drink.deposit, vat_rate ?? drink.vat_rate, image_url !== undefined ? (image_url || null) : drink.image_url, req.params.id);
+
+  // Wenn Getränk deaktiviert wird: aus allen offenen Warenkörben entfernen
+  const newActive = active ?? drink.active;
+  if ((newActive === 0 || newActive === false) && drink.active !== 0) {
+    const result = db.prepare('DELETE FROM cart_items WHERE drink_id = ?').run(req.params.id);
+    res.json({ message: 'Getränk deaktiviert und aus Warenkörben entfernt', carts_cleared: result.changes });
+    return;
+  }
+
   res.json({ message: 'Getränk aktualisiert' });
 });
 

@@ -3,6 +3,7 @@ import React, { Suspense } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
 import { SyncProvider } from './context/SyncContext'
+import { ToastProvider } from './components/Toast'
 import Layout from './components/Layout'
 
 // Kern-Seiten sofort laden (Login, Dashboard, Buchen)
@@ -126,6 +127,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
+        <ToastProvider>
         <CartProvider>
           <SyncProvider>
             <BrowserRouter>
@@ -154,6 +156,7 @@ export default function App() {
             </BrowserRouter>
           </SyncProvider>
         </CartProvider>
+        </ToastProvider>
       </AuthProvider>
     </ErrorBoundary>
   )

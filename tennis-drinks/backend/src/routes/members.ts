@@ -7,12 +7,18 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/', (req: AuthRequest, res: Response) => {
-  const rows = db.prepare('SELECT id, member_number, first_name, last_name, email, phone, status, role, team, active, iban, bic, mandate_ref, mandate_date, created_at FROM members ORDER BY last_name, first_name').all();
+  const rows = db.prepare('SELECT id, member_number, first_name, last_name, email, phone, status, role, team, active, iban, bic, mandate_ref, mandate_date, daily_limit, created_at FROM members ORDER BY last_name, first_name').all();
   res.json(rows);
 });
 
+// Anzahl ausstehender Registrierungen (inactive)
+router.get('/pending-count', requireRole('admin', 'kassenwart'), (_req: AuthRequest, res: Response) => {
+  const row = db.prepare(`SELECT COUNT(*) as count FROM members WHERE active = 0 AND role = 'mitglied'`).get() as any;
+  res.json({ count: row.count });
+});
+
 router.get('/:id', (req: AuthRequest, res: Response) => {
-  const member = db.prepare('SELECT id, member_number, first_name, last_name, email, phone, status, role, team, active, iban, bic, mandate_ref, mandate_date, created_at FROM members WHERE id = ?').get(req.params.id);
+  const member = db.prepare('SELECT id, member_number, first_name, last_name, email, phone, status, role, team, active, iban, bic, mandate_ref, mandate_date, daily_limit, created_at FROM members WHERE id = ?').get(req.params.id);
   if (!member) { res.status(404).json({ error: 'Mitglied nicht gefunden' }); return; }
   res.json(member);
 });
@@ -35,13 +41,16 @@ router.post('/', requireRole('admin', 'kassenwart'), (req: AuthRequest, res: Res
 });
 
 router.put('/:id', requireRole('admin', 'kassenwart'), (req: AuthRequest, res: Response) => {
-  const { first_name, last_name, email, phone, status, role, team, active, pin, iban, bic, mandate_ref, mandate_date } = req.body;
+  const { first_name, last_name, email, phone, status, role, team, active, pin, iban, bic, mandate_ref, mandate_date, daily_limit } = req.body;
   const member = db.prepare('SELECT * FROM members WHERE id = ?').get(req.params.id) as any;
   if (!member) { res.status(404).json({ error: 'Mitglied nicht gefunden' }); return; }
   const pin_hash = pin ? bcrypt.hashSync(String(pin), 10) : member.pin_hash;
+  const newDailyLimit = daily_limit !== undefined
+    ? (daily_limit === '' || daily_limit === null ? null : Number(daily_limit))
+    : member.daily_limit;
   db.prepare(`
     UPDATE members SET first_name=?, last_name=?, email=?, phone=?, status=?, role=?, team=?, active=?, pin_hash=?,
-    iban=?, bic=?, mandate_ref=?, mandate_date=?, updated_at=datetime('now')
+    iban=?, bic=?, mandate_ref=?, mandate_date=?, daily_limit=?, updated_at=datetime('now')
     WHERE id=?
   `).run(
     first_name ?? member.first_name, last_name ?? member.last_name, email ?? member.email,
@@ -50,6 +59,7 @@ router.put('/:id', requireRole('admin', 'kassenwart'), (req: AuthRequest, res: R
     iban !== undefined ? iban : member.iban, bic !== undefined ? bic : member.bic,
     mandate_ref !== undefined ? mandate_ref : member.mandate_ref,
     mandate_date !== undefined ? mandate_date : member.mandate_date,
+    newDailyLimit,
     req.params.id
   );
   res.json({ message: 'Mitglied aktualisiert' });

@@ -6,6 +6,7 @@ import { useSync } from '../context/SyncContext'
 import { enqueueBooking } from '../lib/offlineQueue'
 import api from '../api'
 import { CATEGORY_LABELS } from '../types'
+import ConfirmModal from '../components/ConfirmModal'
 
 type BookingMode = 'einzeln' | 'aufteilen' | 'fuer-andere'
 
@@ -26,7 +27,7 @@ function saveSavedPersons(p: SavedPerson[]) {
 }
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, clearCart, totalItems, totalPrice } = useCart()
+  const { items, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice } = useCart()
   const { user, isThekenwart } = useAuth()
   const { isOnline, refreshPendingCount } = useSync()
   const navigate = useNavigate()
@@ -41,6 +42,13 @@ export default function CartPage() {
   const [success, setSuccess] = useState(false)
   const [offlineQueued, setOfflineQueued] = useState(false)
   const [bookedSummary, setBookedSummary] = useState({ count: 0, total: 0 })
+  const [note, setNote] = useState('')
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [confirmMsg, setConfirmMsg] = useState('')
+  const [lastBookingIds, setLastBookingIds] = useState<number[]>([])
+  const [undoSeconds, setUndoSeconds] = useState(0)
+  const [lastBookedItems, setLastBookedItems] = useState<typeof items>([])
+  const [dailyInfo, setDailyInfo] = useState<{ today_total: number; daily_limit: number | null } | null>(null)
 
   // Für-andere-Modus: Zielperson
   const [targetPerson, setTargetPerson] = useState<SavedPerson | null>(null)
@@ -113,20 +121,50 @@ export default function CartPage() {
     ? totalPrice / totalPersons
     : totalPrice
 
-  const handleCheckout = async () => {
+  // Tagesausgaben laden
+  useEffect(() => {
+    if (!isOnline) return
+    api.get('/cart/daily-spending').then(r => setDailyInfo(r.data)).catch(() => {})
+  }, [isOnline])
+
+  // Undo-Countdown
+  useEffect(() => {
+    if (undoSeconds <= 0) return
+    const t = setTimeout(() => setUndoSeconds(s => s - 1), 1000)
+    return () => clearTimeout(t)
+  }, [undoSeconds])
+
+  const handleUndoBooking = async () => {
+    if (!lastBookingIds.length) return
+    try {
+      await Promise.all(lastBookingIds.map(id => api.put(`/bookings/${id}/cancel`)))
+      // Artikel wieder in den Warenkorb legen
+      for (const item of lastBookedItems) {
+        addItem(item.drink, item.quantity)
+      }
+      setLastBookingIds([])
+      setLastBookedItems([])
+      setUndoSeconds(0)
+      setSuccess(false)
+    } catch { /* Fehler ignorieren */ }
+  }
+
+  const openCheckout = () => {
     if (!items.length) return
     if (mode === 'aufteilen' && selectedIds.size === 0) return
     if (mode === 'fuer-andere' && !targetPerson) return
-
-    // Bestätigung vor Buchung
-    const itemList = items.map(i => `${i.quantity}× ${i.drink.name}`).join(', ')
-    const confirmMsg = mode === 'einzeln'
-      ? `${totalPrice.toFixed(2)} € auf dein Konto buchen?\n\n${itemList}`
+    const itemList = items.map(i => `${i.quantity}× ${i.drink.name}`).join('\n')
+    const msg = mode === 'einzeln'
+      ? `${totalPrice.toFixed(2)} € auf dein Konto eintragen?\n\n${itemList}`
       : mode === 'fuer-andere' && targetPerson
-        ? `${totalPrice.toFixed(2)} € auf ${targetPerson.first_name} ${targetPerson.last_name} buchen?\n\n${itemList}`
-        : `${totalPrice.toFixed(2)} € auf ${totalPersons} Personen aufteilen (${perPersonAmount.toFixed(2)} €/Person)?\n\n${itemList}`
-    if (!window.confirm(confirmMsg)) return
+        ? `${totalPrice.toFixed(2)} € auf ${targetPerson.first_name} ${targetPerson.last_name} eintragen?\n\n${itemList}`
+        : `${totalPrice.toFixed(2)} € auf ${totalPersons} Personen aufteilen (${perPersonAmount.toFixed(2)} €/Person)\n\n${itemList}`
+    setConfirmMsg(msg)
+    setShowConfirm(true)
+  }
 
+  const handleCheckout = async () => {
+    setShowConfirm(false)
     setLoading(true)
 
     const bookedCount = items.reduce((s, i) => s + i.quantity, 0)
@@ -157,28 +195,18 @@ export default function CartPage() {
     }
 
     try {
+      const bookedIds: number[] = []
       if (mode === 'einzeln') {
-        // Alle Buchungen parallel senden
-        await Promise.all(items.map(item =>
-          api.post('/bookings', {
-            drink_id: item.drink.id,
-            member_id: user!.id,
-            quantity: item.quantity,
-            booking_type: 'einzeln',
-          })
+        const results = await Promise.all(items.map(item =>
+          api.post('/bookings', { drink_id: item.drink.id, member_id: user!.id, quantity: item.quantity, booking_type: 'einzeln', guest_note: note || undefined })
         ))
+        results.forEach(r => { if (r.data?.id) bookedIds.push(r.data.id) })
       } else if (mode === 'fuer-andere' && targetPerson) {
-        // Für andere Person buchen – parallel
-        await Promise.all(items.map(item =>
-          api.post('/bookings', {
-            drink_id: item.drink.id,
-            member_id: targetPerson.id,
-            quantity: item.quantity,
-            booking_type: 'einzeln',
-          })
+        const results = await Promise.all(items.map(item =>
+          api.post('/bookings', { drink_id: item.drink.id, member_id: targetPerson.id, quantity: item.quantity, booking_type: 'einzeln', guest_note: note || undefined })
         ))
+        results.forEach(r => { if (r.data?.id) bookedIds.push(r.data.id) })
       } else if (mode === 'aufteilen') {
-        // Server-Side Split (atomar)
         const personIds = savedPersons.filter(p => selectedIds.has(p.id)).map(p => p.id)
         await api.post('/bookings/split', {
           items: items.map(i => ({ drink_id: i.drink.id, quantity: i.quantity })),
@@ -186,11 +214,15 @@ export default function CartPage() {
         })
       }
 
+      setLastBookedItems([...items])
       clearCart()
       setBookedSummary({ count: bookedCount, total: bookedTotal })
+      setLastBookingIds(bookedIds)
+      setUndoSeconds(30)
+      api.get('/cart/daily-spending').then(r => setDailyInfo(r.data)).catch(() => {})
       setSuccess(true)
     } catch (e: any) {
-      alert(e.response?.data?.error || 'Fehler beim Buchen')
+      alert(e.response?.data?.error || 'Fehler beim Eintragen')
     } finally {
       setLoading(false)
     }
@@ -217,9 +249,16 @@ export default function CartPage() {
             {mode === 'aufteilen' && (
               <p className="text-gray-500 mt-1 text-sm">Aufgeteilt auf {totalPersons} Personen · {perPersonAmount.toFixed(2)} € / Person</p>
             )}
+            {/* Undo-Button (30 Sekunden) */}
+            {undoSeconds > 0 && lastBookingIds.length > 0 && (
+              <button onClick={handleUndoBooking}
+                className="mt-4 flex items-center gap-2 py-2.5 px-5 rounded-xl border-2 border-orange-300 text-orange-600 font-semibold text-sm hover:bg-orange-50 transition-colors">
+                ↩️ Stornieren ({undoSeconds}s)
+              </button>
+            )}
           </>
         )}
-        <button onClick={() => navigate('/')} className="btn-primary mt-6">Zurück zum Start</button>
+        <button onClick={() => navigate('/')} className="btn-primary mt-4">Zurück zum Start</button>
       </div>
     )
   }
@@ -297,7 +336,7 @@ export default function CartPage() {
 
       {/* Modus wählen */}
       <div className="card mb-4">
-        <label className="block font-bold mb-3">Buchen auf</label>
+        <label className="block font-bold mb-3">Eintragen auf</label>
         <div className={`grid ${isThekenwart ? 'grid-cols-3' : 'grid-cols-2'} gap-2 mb-3`}>
           <button onClick={() => setMode('einzeln')}
             className={`py-3 rounded-xl font-medium text-sm transition-colors ${mode === 'einzeln' ? 'text-white' : 'bg-gray-100 text-gray-700'}`}
@@ -416,20 +455,60 @@ export default function CartPage() {
         )}
       </div>
 
-      <button onClick={handleCheckout}
+      {/* Tageslimit-Warnung */}
+      {dailyInfo && dailyInfo.daily_limit != null && (
+        <div className={`mb-3 p-3 rounded-xl text-sm font-medium ${
+          dailyInfo.today_total + totalPrice > dailyInfo.daily_limit
+            ? 'bg-orange-50 border border-orange-300 text-orange-800'
+            : 'bg-blue-50 border border-blue-200 text-blue-800'
+        }`}>
+          {dailyInfo.today_total + totalPrice > dailyInfo.daily_limit ? (
+            <>
+              ⚠️ <strong>Tageslimit überschritten:</strong> Heute bereits {dailyInfo.today_total.toFixed(2)} € von {dailyInfo.daily_limit.toFixed(2)} € verbucht.
+              Diese Buchung würde das Limit um {(dailyInfo.today_total + totalPrice - dailyInfo.daily_limit).toFixed(2)} € überschreiten.
+            </>
+          ) : (
+            <>ℹ️ Heute bereits {dailyInfo.today_total.toFixed(2)} € von {dailyInfo.daily_limit.toFixed(2)} € Tageslimit verbucht.</>
+          )}
+        </div>
+      )}
+
+      {/* Notiz-Feld (nur für einzeln / für-andere) */}
+      {(mode === 'einzeln' || mode === 'fuer-andere') && (
+        <textarea
+          value={note}
+          onChange={e => setNote(e.target.value)}
+          className="input-field text-sm mb-3"
+          placeholder="📝 Notiz (optional, z.B. für Abrechnung)"
+          rows={2}
+          style={{ resize: 'none' }}
+        />
+      )}
+
+      <button onClick={openCheckout}
         disabled={loading || (mode === 'aufteilen' && selectedIds.size === 0) || (mode === 'fuer-andere' && !targetPerson)}
         className="btn-primary disabled:opacity-50">
-        {loading ? 'Buchen…' : isOnline
+        {loading ? 'Eintragen…' : isOnline
           ? mode === 'aufteilen'
             ? `✓ Aufteilen (${perPersonAmount.toFixed(2)} € / Person)`
             : mode === 'fuer-andere' && targetPerson
-              ? `✓ Buchen für ${targetPerson.first_name} (${totalPrice.toFixed(2)} €)`
-              : `✓ Alle buchen (${totalPrice.toFixed(2)} €)`
+              ? `✓ Eintragen für ${targetPerson.first_name} (${totalPrice.toFixed(2)} €)`
+              : `✓ Alle eintragen (${totalPrice.toFixed(2)} €)`
           : `📵 Offline speichern (${totalPrice.toFixed(2)} €)`}
       </button>
       <button onClick={() => navigate('/book')} className="btn-secondary mt-2">
         + Weitere Getränke
       </button>
+
+      {showConfirm && (
+        <ConfirmModal
+          title="Buchung bestätigen"
+          message={confirmMsg}
+          confirmLabel="Jetzt eintragen"
+          onConfirm={handleCheckout}
+          onCancel={() => setShowConfirm(false)}
+        />
+      )}
     </div>
   )
 }
