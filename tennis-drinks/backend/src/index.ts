@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import cron from 'node-cron';
 import { initializeDatabase } from './db/schema';
 
 // App-Version aus package.json (Root)
@@ -201,6 +202,80 @@ if (fs.existsSync(frontendDist)) {
 } else {
   console.log('Frontend dist nicht gefunden – nur API-Modus (Entwicklung)');
 }
+
+// ── Auto-Checkout: Jeden Tag um 03:00 Uhr alle offenen Warenkörbe automatisch buchen ──
+function autoCheckoutAllCarts() {
+  console.log('[AutoCheckout] Starte automatische Buchung aller offenen Warenkörbe...');
+  try {
+    const cartItems = db.prepare(`
+      SELECT ci.member_id, ci.drink_id, ci.quantity,
+             d.price, d.stock, d.name AS drink_name, d.active
+      FROM cart_items ci
+      JOIN drinks d ON d.id = ci.drink_id
+      WHERE d.active = 1
+      ORDER BY ci.member_id
+    `).all() as any[];
+
+    if (cartItems.length === 0) {
+      console.log('[AutoCheckout] Keine offenen Warenkörbe – nichts zu tun.');
+      return;
+    }
+
+    // Grupieren nach member_id
+    const byMember = new Map<number, any[]>();
+    for (const item of cartItems) {
+      if (!byMember.has(item.member_id)) byMember.set(item.member_id, []);
+      byMember.get(item.member_id)!.push(item);
+    }
+
+    const insBooking  = db.prepare(`INSERT INTO bookings (drink_id, member_id, quantity, unit_price, total_price, booking_type, status, created_by) VALUES (?, ?, ?, ?, ?, 'einzeln', 'bestaetigt', ?)`);
+    const updStock    = db.prepare(`UPDATE drinks SET stock = stock - ?, updated_at = datetime('now') WHERE id = ?`);
+    const insMovement = db.prepare(`INSERT INTO inventory_movements (drink_id, movement_type, quantity, comment, created_by) VALUES (?, 'verbrauch', ?, ?, ?)`);
+    const delCart     = db.prepare('DELETE FROM cart_items WHERE member_id = ?');
+    const insAudit    = db.prepare(`INSERT INTO audit_log (entity_type, entity_id, action, old_value, new_value, created_by) VALUES ('cart', ?, 'auto_checkout', 'offen', 'gebucht', ?)`);
+
+    let totalBooked = 0, skipped = 0, errors = 0;
+
+    for (const [memberId, items] of byMember) {
+      try {
+        db.transaction(() => {
+          for (const item of items) {
+            // Bestand neu abfragen (atomar)
+            const drink = db.prepare('SELECT stock FROM drinks WHERE id = ? AND active = 1').get(item.drink_id) as any;
+            if (!drink || drink.stock < item.quantity) {
+              console.warn(`[AutoCheckout] Übersprungen: ${item.drink_name} (Bestand: ${drink?.stock ?? 0}, benötigt: ${item.quantity})`);
+              skipped++;
+              continue;
+            }
+            const total = parseFloat((item.price * item.quantity).toFixed(2));
+            const ins = insBooking.run(item.drink_id, memberId, item.quantity, item.price, total, memberId);
+            updStock.run(item.quantity, item.drink_id);
+            insMovement.run(item.drink_id, -item.quantity, `Auto-Checkout #${ins.lastInsertRowid}`, memberId);
+            totalBooked++;
+          }
+          delCart.run(memberId);
+          insAudit.run(memberId, memberId);
+        })();
+      } catch (e: any) {
+        console.error(`[AutoCheckout] Fehler bei Mitglied ${memberId}:`, e.message);
+        errors++;
+      }
+    }
+    console.log(`[AutoCheckout] Fertig: ${totalBooked} Buchungen erstellt, ${skipped} übersprungen, ${errors} Fehler`);
+  } catch (e: any) {
+    console.error('[AutoCheckout] Kritischer Fehler:', e.message);
+  }
+}
+
+// Cron-Job: täglich 03:00 Uhr (Europe/Berlin)
+cron.schedule('0 3 * * *', autoCheckoutAllCarts, { timezone: 'Europe/Berlin' });
+console.log('[AutoCheckout] Nacht-Job registriert: täglich 03:00 Uhr (Europe/Berlin)');
+
+// Manueller Trigger-Endpoint (Admin)
+app.post('/api/auto-checkout/trigger', authenticate, requireRole('admin'), (_req: AuthRequest, res: any) => {
+  autoCheckoutAllCarts();
+  res.json({ message: 'Auto-Checkout manuell ausgelöst' });
+});
 
 app.listen(PORT, () => {
   console.log(`TV Bruvi Getränke läuft auf Port ${PORT} [${isProd ? 'production' : 'development'}]`);

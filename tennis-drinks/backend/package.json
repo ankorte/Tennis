@@ -19,9 +19,11 @@
     "nodemailer": "^8.0.3",
     "qrcode": "^1.5.3",
     "sepa": "^3.0.0",
+    "node-cron": "^3.0.3",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@types/node-cron": "^3.0.11",
     "@types/bcryptjs": "^2.4.6",
     "@types/better-sqlite3": "^7.6.8",
     "@types/cors": "^2.8.17",

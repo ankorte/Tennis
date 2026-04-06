@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import ConfirmModal from './ConfirmModal'
+import MissingContactModal from './MissingContactModal'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import { useSync } from '../context/SyncContext'
@@ -44,6 +46,46 @@ export default function Layout() {
 
   const { showToast } = useToast()
   useEffect(() => { setApiToast(showToast) }, [showToast])
+
+  // Backup-Download
+  const handleBackup = async () => {
+    try {
+      const res = await api.get('/backup', { responseType: 'blob' })
+      const url = URL.createObjectURL(new Blob([res.data], { type: 'application/octet-stream' }))
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `tennis-backup-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.db`
+      document.body.appendChild(a); a.click()
+      document.body.removeChild(a); URL.revokeObjectURL(url)
+    } catch { showToast('Backup fehlgeschlagen', 'error') }
+  }
+
+  // Restore
+  const restoreInputRef = useRef<HTMLInputElement>(null)
+  const [pendingRestoreFile, setPendingRestoreFile] = useState<File | null>(null)
+  const [restoring, setRestoring] = useState(false)
+
+  const handleRestoreSelect = async (file: File) => {
+    if (!file.name.endsWith('.db')) { showToast('Bitte eine .db Datei auswählen', 'error'); return }
+    const headerBytes = await file.slice(0, 16).text()
+    if (!headerBytes.startsWith('SQLite format 3')) { showToast('Ungültige SQLite-Datei', 'error'); return }
+    setPendingRestoreFile(file)
+  }
+
+  const doRestore = async () => {
+    if (!pendingRestoreFile) return
+    setPendingRestoreFile(null)
+    setRestoring(true)
+    try {
+      const fd = new FormData(); fd.append('file', pendingRestoreFile)
+      const res = await api.post('/backup/restore', fd, { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 60000 })
+      showToast(`✅ ${res.data.message}`)
+      setTimeout(() => window.location.reload(), 3000)
+    } catch (e: any) {
+      showToast('❌ ' + (e.response?.data?.error || e.message), 'error')
+      setRestoring(false)
+    }
+  }
 
   // Dark Mode anwenden
   useEffect(() => {
@@ -92,6 +134,7 @@ export default function Layout() {
     <div className="min-h-screen flex flex-col">
       <OfflineBanner />
       <UpdatePrompt />
+      <MissingContactModal />
 
       {/* Header */}
       <header className="sticky top-0 z-50 shadow-lg"
@@ -215,17 +258,27 @@ export default function Layout() {
                 isKassenwart && { icon: '👤', label: 'Mitglieder', path: '/members', badge: pendingRegistrations },
                 isThekenwart && { icon: '🍺', label: 'Getränke', path: '/drinks' },
                 isKassenwart && { icon: '📋', label: 'Buchungen', path: '/admin/bookings' },
+                isKassenwart && { icon: null, imgSrc: '/karten-icon.png.png', label: 'Karten', path: '/admin/karten' },
                 isThekenwart && { icon: '🛒', label: 'Warenkörbe', path: '/admin/carts' },
                 isThekenwart && { icon: '📊', label: 'Statistiken', path: '/admin/stats' },
                 isKassenwart && { icon: '📥', label: 'Import', path: '/import' },
                 isKassenwart && { icon: '🏦', label: 'SEPA', path: '/sepa' },
                 isKassenwart && { icon: '📧', label: 'E-Mail', path: '/email' },
                 isAdmin && { icon: '🗄️', label: 'Datenbank', path: '/database' },
+                isAdmin && { icon: '💾', label: 'Backup', path: '__backup__' },
+                isAdmin && { icon: '📤', label: 'Restore', path: '__restore__' },
                 { icon: '⚙️', label: 'Profil', path: '/profile' },
               ].filter(Boolean).map((item: any) => (
-                <button key={item.path} onClick={() => { navigate(item.path); setShowMore(false) }}
+                <button key={item.path} onClick={() => {
+                  if (item.path === '__backup__') { handleBackup(); setShowMore(false) }
+                  else if (item.path === '__restore__') { restoreInputRef.current?.click(); setShowMore(false) }
+                  else { navigate(item.path); setShowMore(false) }
+                }}
                   className="flex flex-col items-center gap-1 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors relative">
-                  <span className="text-2xl">{item.icon}</span>
+                  {item.imgSrc
+                    ? <img src={item.imgSrc} alt={item.label} className="w-8 h-8 object-contain" />
+                    : <span className="text-2xl">{item.icon}</span>
+                  }
                   <span className="text-xs font-medium text-gray-700">{item.label}</span>
                   {item.badge > 0 && (
                     <span className="absolute top-1 right-1 text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center"
@@ -255,7 +308,7 @@ export default function Layout() {
         </NavLink>
         <NavLink to="/my-bookings" className={({ isActive }) =>
           `flex flex-col items-center px-2 py-1.5 rounded-xl transition-colors ${isActive ? 'text-tennis-green' : 'text-gray-400'}`}>
-          <span className="text-2xl">💳</span>
+          <img src="/karten-icon.png.png" alt="Karte" className="w-7 h-7 object-contain" />
           <span className="text-xs mt-0.5">Karte</span>
         </NavLink>
         {isThekenwart && (
@@ -272,6 +325,22 @@ export default function Layout() {
           </button>
         )}
       </nav>
+
+      {/* Restore: versteckter File-Input */}
+      <input ref={restoreInputRef} type="file" accept=".db" className="hidden"
+        onChange={e => { const f = e.target.files?.[0]; if (f) handleRestoreSelect(f); e.target.value = '' }} />
+
+      {/* Restore: Bestätigungs-Dialog */}
+      {pendingRestoreFile && (
+        <ConfirmModal
+          title="Datenbank wiederherstellen?"
+          message={`⚠️ Die aktuelle Datenbank wird durch "${pendingRestoreFile.name}" (${(pendingRestoreFile.size / 1024).toFixed(0)} KB) ersetzt!\n\nEin automatisches Backup wird vorher erstellt. Der Server startet danach neu.\n\nWirklich fortfahren?`}
+          confirmLabel={restoring ? '⏳ Wiederherstellen...' : 'Wiederherstellen'}
+          danger
+          onConfirm={doRestore}
+          onCancel={() => setPendingRestoreFile(null)}
+        />
+      )}
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { Router, Response } from 'express';
 import db from '../db/schema';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
+import * as XLSX from 'xlsx';
 
 const router = Router();
 router.use(authenticate);
@@ -72,6 +73,88 @@ router.post('/', (req: AuthRequest, res: Response) => {
   } catch (e: any) {
     res.status(400).json({ error: e.message || 'Buchung fehlgeschlagen' });
   }
+});
+
+// ── Excel-Export aller Buchungen (Admin/Kassenwart) ─────────────────────────────
+// GET /api/bookings/export?member_id=X (optional) → .xlsx Download
+router.get('/export', requireRole('admin', 'kassenwart'), (req: AuthRequest, res: Response) => {
+  const { member_id, from, to } = req.query;
+
+  const conditions: string[] = ['b.cancelled = 0'];
+  const params: any[]        = [];
+
+  if (member_id) { conditions.push('b.member_id = ?'); params.push(member_id); }
+  if (from)      { conditions.push('b.created_at >= ?'); params.push(from); }
+  if (to)        { conditions.push('b.created_at <= ?'); params.push(to + ' 23:59:59'); }
+
+  const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
+
+  const rows = db.prepare(`
+    SELECT
+      b.id                                          AS "Buchungs-Nr.",
+      strftime('%d.%m.%Y', b.created_at)            AS "Datum",
+      strftime('%H:%M', b.created_at)               AS "Uhrzeit",
+      m.first_name || ' ' || m.last_name            AS "Person",
+      m.member_number                               AS "Mitgliedsnummer",
+      d.name                                        AS "Getränk",
+      d.category                                    AS "Kategorie",
+      b.quantity                                    AS "Menge",
+      b.unit_price                                  AS "Einzelpreis (€)",
+      b.total_price                                 AS "Gesamtpreis (€)",
+      b.booking_type                                AS "Typ",
+      b.status                                      AS "Status",
+      CASE WHEN b.cancelled = 1 THEN 'Ja' ELSE 'Nein' END AS "Storniert",
+      c.first_name || ' ' || c.last_name            AS "Gebucht von"
+    FROM bookings b
+    JOIN drinks d     ON d.id = b.drink_id
+    LEFT JOIN members m ON m.id = b.member_id
+    LEFT JOIN members c ON c.id = b.created_by
+    ${where}
+    ORDER BY b.created_at DESC
+  `).all(...params) as any[];
+
+  // --- Übersichtsblatt: Summen pro Person ---
+  const summary = db.prepare(`
+    SELECT
+      m.first_name || ' ' || m.last_name AS "Person",
+      m.member_number                    AS "Mitgliedsnummer",
+      COUNT(*)                           AS "Anzahl Buchungen",
+      SUM(b.quantity)                    AS "Gesamtmenge",
+      ROUND(SUM(b.total_price), 2)       AS "Gesamtbetrag (€)"
+    FROM bookings b
+    LEFT JOIN members m ON m.id = b.member_id
+    ${where}
+    GROUP BY b.member_id
+    ORDER BY SUM(b.total_price) DESC
+  `).all(...params) as any[];
+
+  // Workbook erstellen
+  const wb = XLSX.utils.book_new();
+
+  // Blatt 1: Alle Buchungen
+  const ws1 = XLSX.utils.json_to_sheet(rows);
+  // Spaltenbreiten
+  ws1['!cols'] = [
+    { wch: 12 }, { wch: 12 }, { wch: 8 }, { wch: 22 }, { wch: 16 },
+    { wch: 20 }, { wch: 14 }, { wch: 8 }, { wch: 16 }, { wch: 16 },
+    { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 22 },
+  ];
+  XLSX.utils.book_append_sheet(wb, ws1, 'Buchungen');
+
+  // Blatt 2: Übersicht pro Person
+  const ws2 = XLSX.utils.json_to_sheet(summary);
+  ws2['!cols'] = [{ wch: 24 }, { wch: 16 }, { wch: 18 }, { wch: 14 }, { wch: 18 }];
+  XLSX.utils.book_append_sheet(wb, ws2, 'Übersicht pro Person');
+
+  const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 16);
+  const filename  = member_id
+    ? `buchungen-person-${member_id}-${timestamp}.xlsx`
+    : `buchungen-alle-${timestamp}.xlsx`;
+
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.send(buf);
 });
 
 // Favoriten: Top-3 meistgebuchte Getränke des Nutzers

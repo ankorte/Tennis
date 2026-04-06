@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import React, { Suspense } from 'react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
@@ -27,6 +27,7 @@ const SepaPage = React.lazy(() => import('./pages/SepaPage'))
 const EmailPage = React.lazy(() => import('./pages/EmailPage'))
 const DatabasePage = React.lazy(() => import('./pages/DatabasePage'))
 const ProfilePage = React.lazy(() => import('./pages/ProfilePage'))
+const AdminKartenPage = React.lazy(() => import('./pages/AdminKartenPage'))
 
 // Lade-Spinner für lazy-geladene Seiten
 function PageLoader() {
@@ -42,8 +43,17 @@ function PageLoader() {
 }
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const { token } = useAuth()
-  return token ? <>{children}</> : <Navigate to="/login" />
+  const { token, mustChangePin } = useAuth()
+  if (!token) return <Navigate to="/login" />
+  return <>{children}</>
+}
+
+// Routen die bei must_change_pin gesperrt werden – erlaubt nur /profile
+function PinGuard({ children }: { children: React.ReactNode }) {
+  const { mustChangePin } = useAuth()
+  const { pathname } = useLocation()
+  if (mustChangePin && pathname !== '/profile') return <Navigate to="/profile" replace />
+  return <>{children}</>
 }
 
 // Error Boundary damit die App bei Fehlern nicht komplett weiß wird
@@ -134,7 +144,7 @@ export default function App() {
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
-                <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
+                <Route path="/" element={<PrivateRoute><PinGuard><Layout /></PinGuard></PrivateRoute>}>
                   <Route index element={<DashboardPage />} />
                   <Route path="book" element={<BookPage />} />
                   <Route path="cart" element={<CartPage />} />
@@ -145,6 +155,7 @@ export default function App() {
                   <Route path="billing" element={<Suspense fallback={<PageLoader />}><BillingPage /></Suspense>} />
                   <Route path="admin/bookings" element={<Suspense fallback={<PageLoader />}><BookingsAdminPage /></Suspense>} />
                   <Route path="admin/carts" element={<Suspense fallback={<PageLoader />}><AdminCartsPage /></Suspense>} />
+                  <Route path="admin/karten" element={<Suspense fallback={<PageLoader />}><AdminKartenPage /></Suspense>} />
                   <Route path="admin/stats" element={<Suspense fallback={<PageLoader />}><ClubStatsPage /></Suspense>} />
                   <Route path="import" element={<Suspense fallback={<PageLoader />}><ImportPage /></Suspense>} />
                   <Route path="sepa" element={<Suspense fallback={<PageLoader />}><SepaPage /></Suspense>} />
