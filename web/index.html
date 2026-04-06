@@ -872,65 +872,70 @@
     </div>
     <div class="gallery-grid fade-in">
 
-      <div class="gallery-item" onclick="openLightbox('images/spielplan-mixed-2023.jpg','Spielplan Mixed – Vereinsmeisterschaft 2023')">
+      <!-- Großes Hauptbild: Tennisanlage -->
+      <div class="gallery-item" onclick="openLightbox('images/anlage.jpg','Tennisanlage im Vilser Holz')">
         <div class="gallery-inner">
-          <img class="gallery-img" src="images/spielplan-mixed-2023.jpg" alt="Spielplan Mixed 2023"
-               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
-          <div class="gallery-placeholder" style="display:none;background:linear-gradient(135deg,#fef9e7,#fce08d)">🏆<span>Spielplan Mixed 2023</span></div>
+          <img class="gallery-img" src="images/anlage.jpg" alt="Tennisanlage" />
         </div>
-        <div class="gallery-caption">Spielplan Mixed · Vereinsmeisterschaft 2023</div>
+        <div class="gallery-caption">🎾 Unsere Tennisanlage im Vilser Holz</div>
         <div class="gallery-overlay"><span class="gallery-overlay-icon">🔍</span></div>
       </div>
 
+      <!-- Jugendtraining -->
+      <div class="gallery-item" onclick="openLightbox('images/jugendtraining.jpg','Kinder- & Jugendtraining')">
+        <div class="gallery-inner">
+          <img class="gallery-img" src="images/jugendtraining.jpg" alt="Jugendtraining" />
+        </div>
+        <div class="gallery-caption">👶 Kinder- &amp; Jugendtraining</div>
+        <div class="gallery-overlay"><span class="gallery-overlay-icon">🔍</span></div>
+      </div>
+
+      <!-- Turnier / Match -->
+      <div class="gallery-item" onclick="openLightbox('images/turnier.jpg','Vereinsmeisterschaft')">
+        <div class="gallery-inner">
+          <img class="gallery-img" src="images/turnier.jpg" alt="Vereinsmeisterschaft" />
+        </div>
+        <div class="gallery-caption">🏆 Vereinsmeisterschaft</div>
+        <div class="gallery-overlay"><span class="gallery-overlay-icon">🔍</span></div>
+      </div>
+
+      <!-- Spielplan Damen-Doppel 2023 (nutzt Fallback auf Unsplash-Bild) -->
       <div class="gallery-item" onclick="openLightbox('images/spielplan-damen-doppel-2023.jpg','Spielplan Damen-Doppel – Vereinsmeisterschaft 2023')">
         <div class="gallery-inner">
-          <img class="gallery-img" src="images/spielplan-damen-doppel-2023.jpg" alt="Spielplan Damen-Doppel 2023"
-               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
-          <div class="gallery-placeholder" style="display:none;background:linear-gradient(135deg,#fce7f3,#fbcfe8)">🎾<span>Damen-Doppel 2023</span></div>
+          <img class="gallery-img" src="images/spielplan-damen-doppel-2023.jpg" alt="Damen-Doppel 2023"
+               onerror="this.src='images/doppel.jpg'" />
         </div>
-        <div class="gallery-caption">Damen-Doppel · Vorrunde 2023</div>
+        <div class="gallery-caption">👩 Damen-Doppel · Vorrunde 2023</div>
         <div class="gallery-overlay"><span class="gallery-overlay-icon">🔍</span></div>
       </div>
 
+      <!-- Spielplan Herren-Doppel 2023 -->
       <div class="gallery-item" onclick="openLightbox('images/spielplan-herren-doppel-2023.jpg','Spielplan Herren-Doppel – Vereinsmeisterschaft 2023')">
         <div class="gallery-inner">
-          <img class="gallery-img" src="images/spielplan-herren-doppel-2023.jpg" alt="Spielplan Herren-Doppel 2023"
-               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
-          <div class="gallery-placeholder" style="display:none;background:linear-gradient(135deg,#e0f2fe,#bae6fd)">🎾<span>Herren-Doppel 2023</span></div>
+          <img class="gallery-img" src="images/spielplan-herren-doppel-2023.jpg" alt="Herren-Doppel 2023"
+               onerror="this.src='images/training.jpg'" />
         </div>
-        <div class="gallery-caption">Herren-Doppel · Vorrunde 2023</div>
+        <div class="gallery-caption">👨 Herren-Doppel · Vorrunde 2023</div>
         <div class="gallery-overlay"><span class="gallery-overlay-icon">🔍</span></div>
       </div>
 
-      <div class="gallery-item" onclick="openLightbox('images/spielplan-mixed-2022-b.jpg','Spielplan Mixed 2022 – Gruppe B')">
+      <!-- Spielplan Mixed 2023 -->
+      <div class="gallery-item" onclick="openLightbox('images/spielplan-mixed-2023.jpg','Spielplan Mixed – Vereinsmeisterschaft 2023')">
         <div class="gallery-inner">
-          <img class="gallery-img" src="images/spielplan-mixed-2022-b.jpg" alt="Spielplan Mixed 2022 Gruppe B"
-               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
-          <div class="gallery-placeholder" style="display:none;background:linear-gradient(135deg,#dcfce7,#bbf7d0)">📋<span>Mixed 2022 Gruppe B</span></div>
+          <img class="gallery-img" src="images/spielplan-mixed-2023.jpg" alt="Mixed 2023"
+               onerror="this.src='images/spieler.jpg'" />
         </div>
-        <div class="gallery-caption">Mixed · Gruppe B · 2022</div>
-        <div class="gallery-overlay"><span class="gallery-overlay-icon">🔍</span></div>
-      </div>
-
-      <div class="gallery-item" onclick="openLightbox('images/spielplan-mixed-2022-c.jpg','Spielplan Mixed 2022 – Gruppe C')">
-        <div class="gallery-inner">
-          <img class="gallery-img" src="images/spielplan-mixed-2022-c.jpg" alt="Spielplan Mixed 2022 Gruppe C"
-               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
-          <div class="gallery-placeholder" style="display:none;background:linear-gradient(135deg,#ede9fe,#ddd6fe)">📋<span>Mixed 2022 Gruppe C</span></div>
-        </div>
-        <div class="gallery-caption">Mixed · Gruppe C · 2022</div>
-        <div class="gallery-overlay"><span class="gallery-overlay-icon">🔍</span></div>
-      </div>
-
-      <div class="gallery-item" onclick="openLightbox('🌲','Vilser Holz – unser Zuhause')">
-        <div class="gallery-inner">
-          <div class="gallery-placeholder" style="background:linear-gradient(135deg,#e8f5ed,#c3e6cb)">🌲<span>Vilser Holz</span></div>
-        </div>
-        <div class="gallery-caption">Unsere Anlage im Vilser Holz</div>
+        <div class="gallery-caption">🎉 Mixed · Vereinsmeisterschaft 2023</div>
         <div class="gallery-overlay"><span class="gallery-overlay-icon">🔍</span></div>
       </div>
 
     </div>
+    <!-- Bildnachweis Unsplash (Lizenzpflicht) -->
+    <p style="text-align:center;margin-top:1rem;font-size:.72rem;color:var(--text-muted)">
+      Fotos: <a href="https://unsplash.com" target="_blank" rel="noopener" style="color:var(--green)">Unsplash</a>
+      (Chino Rocha, Moises Alex, Julian Schiemann u.a.) · Lizenz:
+      <a href="https://unsplash.com/license" target="_blank" rel="noopener" style="color:var(--green)">Unsplash License</a>
+    </p>
   </div>
 </section>
 
