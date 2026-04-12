@@ -615,36 +615,6 @@
     }
     .tl-img:hover { transform: scale(1.02); box-shadow: 0 8px 32px rgba(0,0,0,.2); }
 
-    /* ── Lightbox ── */
-    #lightbox {
-      display: none; position: fixed; inset: 0; z-index: 9999;
-      background: rgba(0,0,0,.92); cursor: zoom-out;
-      align-items: center; justify-content: center;
-      padding: 1.5rem;
-    }
-    #lightbox.open { display: flex; }
-    #lightbox img {
-      max-width: 92vw; max-height: 88vh;
-      object-fit: contain; border-radius: 10px;
-      box-shadow: 0 24px 80px rgba(0,0,0,.6);
-      animation: lbIn .2s ease;
-    }
-    @keyframes lbIn { from { opacity:0; transform: scale(.92); } to { opacity:1; transform: scale(1); } }
-    #lightbox-close {
-      position: fixed; top: 1rem; right: 1.25rem;
-      background: rgba(255,255,255,.15); border: none; color: #fff;
-      font-size: 1.6rem; width: 2.5rem; height: 2.5rem; border-radius: 50%;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      transition: background .2s;
-    }
-    #lightbox-close:hover { background: rgba(255,255,255,.3); }
-    #lightbox-caption {
-      position: fixed; bottom: 1.25rem; left: 50%; transform: translateX(-50%);
-      color: rgba(255,255,255,.8); font-size: .85rem; text-align: center;
-      background: rgba(0,0,0,.5); padding: .4rem 1rem; border-radius: 20px;
-      pointer-events: none; white-space: nowrap;
-    }
-
     .chronik-footer-note {
       text-align: center; margin-top: 3rem;
       padding: 1.5rem; background: var(--card-bg);
@@ -1663,13 +1633,6 @@
   </div>
 </section>
 
-<!-- ── Lightbox ── -->
-<div id="lightbox" role="dialog" aria-modal="true" aria-label="Bild vergrößert">
-  <button id="lightbox-close" onclick="lbClose()" aria-label="Schließen">✕</button>
-  <img id="lightbox-img" src="" alt="" />
-  <div id="lightbox-caption"></div>
-</div>
-
 <!-- ── Footer ── -->
 <footer>
   <div class="container">
@@ -2355,27 +2318,24 @@ document.querySelector('.logo')?.addEventListener('click', () => {
 /* ── Beim Laden gespeicherte Inhalte einspielen ── */
 document.addEventListener('DOMContentLoaded', cmsLoad);
 
-/* ── Lightbox ── */
+/* ── Chronik-Bilder: Lightbox ── */
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.tl-img').forEach(img => {
     img.addEventListener('click', () => {
-      if (document.body.classList.contains('cms-active')) return; // kein Lightbox im Edit-Modus
-      document.getElementById('lightbox-img').src = img.src;
-      document.getElementById('lightbox-img').alt = img.alt;
-      document.getElementById('lightbox-caption').textContent = img.alt;
+      if (document.body.classList.contains('cms-active')) return;
+      const lbImg = document.getElementById('lb-img');
+      const lbEmoji = document.getElementById('lb-emoji');
+      const lbTitle = document.getElementById('lb-title');
+      lbImg.src = img.src;
+      lbImg.alt = img.alt;
+      lbImg.style.display = 'block';
+      lbEmoji.style.display = 'none';
+      lbTitle.textContent = img.alt;
       document.getElementById('lightbox').classList.add('open');
       document.body.style.overflow = 'hidden';
     });
   });
-  document.getElementById('lightbox').addEventListener('click', e => {
-    if (e.target === e.currentTarget) lbClose();
-  });
 });
-function lbClose() {
-  document.getElementById('lightbox').classList.remove('open');
-  document.body.style.overflow = '';
-}
-document.addEventListener('keydown', e => { if (e.key === 'Escape') lbClose(); });
 </script>
 </body>
 </html>
