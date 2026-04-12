@@ -651,7 +651,7 @@
     <path d="M2 50 C2 30 18 14 36 6 C42 18 56 26 70 26 C82 14 96 18 98 26 C96 38 90 48 86 50 C90 52 96 62 98 74 C96 82 82 86 70 74 C56 74 42 82 36 94 C18 86 2 70 2 50Z" fill="#c8f060" opacity="0.3"/>
   </svg>
   <div class="container">
-    <div class="hero-badge"><span class="dot"></span> Sommersaison 2026 startet am 1. Mai</div>
+    <div class="hero-badge"><span class="dot"></span> <span data-cms="hero-badge">Sommersaison 2026 startet am 1. Mai</span></div>
     <h1 data-cms="hero-titel">Tennis spielen.<br /><em>Gemeinsam</em><br />besser werden.</h1>
     <p data-cms="hero-text">Willkommen beim Tennisclub Bruchhausen-Vilsen – Dein Verein im Vilser Holz seit über 50 Jahren. Training, Turniere und Gemeinschaft für alle Altersgruppen.</p>
     <div class="hero-actions">
@@ -659,9 +659,9 @@
       <a href="#angebote" class="btn btn-outline">Training entdecken</a>
     </div>
     <div class="hero-stats">
-      <div class="hero-stat"><strong>50+</strong><span>Jahre Tennis in BruVi</span></div>
-      <div class="hero-stat"><strong>60+</strong><span>Kinder & Jugendliche</span></div>
-      <div class="hero-stat"><strong>1. Mai</strong><span>Saisonstart 2026</span></div>
+      <div class="hero-stat"><strong data-cms="hero-stat-1-zahl">50+</strong><span data-cms="hero-stat-1-text">Jahre Tennis in BruVi</span></div>
+      <div class="hero-stat"><strong data-cms="hero-stat-2-zahl">60+</strong><span data-cms="hero-stat-2-text">Kinder & Jugendliche</span></div>
+      <div class="hero-stat"><strong data-cms="hero-stat-3-zahl">1. Mai</strong><span data-cms="hero-stat-3-text">Saisonstart 2026</span></div>
     </div>
   </div>
   <div class="scroll-indicator">
@@ -1628,16 +1628,21 @@ fadeEls.forEach(el => observer.observe(el));
   /* ── Edit Mode: Element-Highlighting ── */
   body.cms-active { padding-top: 52px !important; }
   body.cms-active [data-cms] {
-    position: relative; outline: 2px dashed rgba(45,125,70,.45);
+    position: relative; outline: 2px dashed rgba(245,197,24,.6);
     outline-offset: 3px; border-radius: 4px; cursor: text;
     transition: outline-color .15s, background .15s;
   }
   body.cms-active [data-cms]:hover {
-    outline-color: var(--green); background: rgba(45,125,70,.05);
+    outline-color: var(--yellow); background: rgba(245,197,24,.1);
   }
   body.cms-active [data-cms]:focus {
-    outline: 2px solid var(--green) !important;
-    background: rgba(45,125,70,.07) !important; outline-offset: 3px;
+    outline: 2px solid var(--yellow) !important;
+    background: rgba(245,197,24,.12) !important; outline-offset: 3px;
+  }
+  /* Im Hero: gelbe Umrandung sichtbarer auf dunklem Grund */
+  .hero body.cms-active [data-cms],
+  body.cms-active .hero [data-cms] {
+    outline-color: rgba(245,197,24,.8);
   }
   /* Edit-Label beim Hover */
   body.cms-active [data-cms]::before {
