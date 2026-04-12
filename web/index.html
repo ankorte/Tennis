@@ -745,24 +745,24 @@
         <h3 data-cms="angebot-1-titel">Kinder &amp; Jugend</h3>
         <p data-cms="angebot-1-text">Unser Trainer Christoph betreut jede Woche über 60 Kinder und Jugendliche altersgerecht und professionell.</p>
         <ul class="offer-list">
-          <li>Ab Grundschulalter</li>
-          <li>Kleine Gruppen</li>
-          <li>Begleitung bei Turnieren</li>
-          <li>Punktspiele im Verband</li>
+          <li data-cms="angebot-1-li-1">Ab Grundschulalter</li>
+          <li data-cms="angebot-1-li-2">Kleine Gruppen</li>
+          <li data-cms="angebot-1-li-3">Begleitung bei Turnieren</li>
+          <li data-cms="angebot-1-li-4">Punktspiele im Verband</li>
         </ul>
       </div>
       <div class="offer-card featured">
-        <span class="offer-badge">Empfohlen</span>
+        <span class="offer-badge" data-cms="angebot-2-badge">Empfohlen</span>
         <div class="offer-icon">🌟</div>
         <h3 data-cms="angebot-2-titel">Starter-Mitgliedschaft</h3>
         <p data-cms="angebot-2-text">Der perfekte Einstieg für Neueinsteiger – inklusive Trainerstunden, Schlägern und Bällen.</p>
-        <div class="offer-price">59 € <span>/ Person</span></div>
+        <div class="offer-price" data-cms="angebot-2-preis">59 € <span>/ Person</span></div>
         <ul class="offer-list">
-          <li>10 Trainerstunden in der Gruppe</li>
-          <li>Nutzung aller Außenplätze</li>
-          <li>Samstags in Kleingruppen</li>
-          <li>Schläger &amp; Bälle inklusive</li>
-          <li>Familienoption: 99 € für alle</li>
+          <li data-cms="angebot-2-li-1">10 Trainerstunden in der Gruppe</li>
+          <li data-cms="angebot-2-li-2">Nutzung aller Außenplätze</li>
+          <li data-cms="angebot-2-li-3">Samstags in Kleingruppen</li>
+          <li data-cms="angebot-2-li-4">Schläger &amp; Bälle inklusive</li>
+          <li data-cms="angebot-2-li-5">Familienoption: 99 € für alle</li>
         </ul>
       </div>
       <div class="offer-card">
@@ -770,10 +770,10 @@
         <h3 data-cms="angebot-3-titel">Erwachsenentraining</h3>
         <p data-cms="angebot-3-text">Verschiedene Trainingsgruppen und Individualstunden für Erwachsene – nach Vereinbarung.</p>
         <ul class="offer-list">
-          <li>Gruppentraining</li>
-          <li>Individualstunden</li>
-          <li>Schlaggerbespannung möglich</li>
-          <li>Probeschläger vorhanden</li>
+          <li data-cms="angebot-3-li-1">Gruppentraining</li>
+          <li data-cms="angebot-3-li-2">Individualstunden</li>
+          <li data-cms="angebot-3-li-3">Schlaggerbespannung möglich</li>
+          <li data-cms="angebot-3-li-4">Probeschläger vorhanden</li>
         </ul>
       </div>
       <div class="offer-card">
@@ -781,10 +781,10 @@
         <h3 data-cms="angebot-4-titel">Platzbuchung</h3>
         <p data-cms="angebot-4-text">Buche deinen Wunschplatz bequem online über das BookAndPlay-System.</p>
         <ul class="offer-list">
-          <li>Online buchbar</li>
-          <li>Mehrere Außenplätze</li>
-          <li>Windgeschützte Lage</li>
-          <li>Im Vilser Holz</li>
+          <li data-cms="angebot-4-li-1">Online buchbar</li>
+          <li data-cms="angebot-4-li-2">Mehrere Außenplätze</li>
+          <li data-cms="angebot-4-li-3">Windgeschützte Lage</li>
+          <li data-cms="angebot-4-li-4">Im Vilser Holz</li>
         </ul>
         <div style="margin-top:1.25rem">
           <a href="https://www.bookandplay.de/cgi-bin/WebObjects/BookAndPlay.woa/wa/platz_buchen?id=TVN-307313" target="_blank" rel="noopener" class="btn btn-outline-green" style="font-size:.88rem;padding:.6rem 1.2rem">Platz buchen →</a>
@@ -1655,6 +1655,35 @@ fadeEls.forEach(el => observer.observe(el));
   }
   body.cms-active [data-cms]:hover::before { opacity: 1; }
 
+  /* ── Link-Editor Popover ── */
+  #cms-link-editor {
+    position: fixed; z-index: 9500;
+    background: var(--card-bg); border-radius: 14px;
+    padding: 1rem 1.1rem; width: 320px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.25);
+    border: 2px solid var(--green);
+    display: none;
+  }
+  #cms-link-editor.open { display: block; }
+  #cms-link-editor h4 { font-size: .85rem; font-weight: 700; margin-bottom: .75rem; display: flex; align-items: center; gap: .4rem; }
+  .cms-link-row { margin-bottom: .6rem; }
+  .cms-link-row label { display: block; font-size: .75rem; font-weight: 600; color: var(--text-muted); margin-bottom: .25rem; }
+  .cms-link-row input {
+    width: 100%; padding: .5rem .75rem; border-radius: 8px;
+    border: 1.5px solid var(--border); background: var(--bg); color: var(--text);
+    font-size: .88rem; font-family: inherit;
+  }
+  .cms-link-row input:focus { outline: none; border-color: var(--green); }
+  .cms-link-check { display: flex; align-items: center; gap: .5rem; font-size: .82rem; color: var(--text-muted); margin-bottom: .75rem; }
+  .cms-link-btns { display: flex; gap: .5rem; }
+  .cms-link-apply { flex: 1; padding: .5rem; border-radius: 8px; border: none; background: var(--green); color: #fff; font-size: .82rem; font-weight: 700; cursor: pointer; }
+  .cms-link-apply:hover { background: var(--green-dark); }
+  .cms-link-cancel { padding: .5rem .75rem; border-radius: 8px; border: 1.5px solid var(--border); background: transparent; color: var(--text-muted); font-size: .82rem; cursor: pointer; }
+
+  /* Im Edit-Modus: Links hervorheben */
+  body.cms-active a { outline: 1.5px dashed rgba(245,197,24,.5); outline-offset: 2px; border-radius: 3px; cursor: pointer !important; }
+  body.cms-active a:hover { outline-color: var(--yellow); background: rgba(245,197,24,.1); }
+
   /* ── Bild-Upload in Galerie ── */
   body.cms-active .gallery-item { cursor: pointer; }
   body.cms-active .gallery-item::after {
@@ -1676,6 +1705,27 @@ fadeEls.forEach(el => observer.observe(el));
   }
   #cms-help b { color: var(--yellow); }
 </style>
+
+<!-- Link Editor Popover -->
+<div id="cms-link-editor">
+  <h4>🔗 Link bearbeiten</h4>
+  <div class="cms-link-row">
+    <label>Link-Text</label>
+    <input type="text" id="cms-link-text" placeholder="Linktext..." />
+  </div>
+  <div class="cms-link-row">
+    <label>URL</label>
+    <input type="url" id="cms-link-url" placeholder="https://..." />
+  </div>
+  <label class="cms-link-check">
+    <input type="checkbox" id="cms-link-target" />
+    In neuem Tab öffnen
+  </label>
+  <div class="cms-link-btns">
+    <button class="cms-link-apply" onclick="cmsLinkApply()">✓ Übernehmen</button>
+    <button class="cms-link-cancel" onclick="cmsLinkClose()">Abbrechen</button>
+  </div>
+</div>
 
 <!-- CMS Trigger Button -->
 <button id="cms-fab" title="Bearbeitungsmodus (Strg+Shift+E)" onclick="cmsTrigger()">✏️</button>
@@ -1762,6 +1812,7 @@ function cmsEnter() {
     };
     item.addEventListener('click', item._cmsClick, true);
   });
+  cmsBindLinks();
   setTimeout(() => { document.getElementById('cms-help').style.display = 'none'; }, 6000);
 }
 function cmsExit() {
@@ -1772,15 +1823,27 @@ function cmsExit() {
     if (item._cmsClick) { item.removeEventListener('click', item._cmsClick, true); delete item._cmsClick; }
     item.onclick = item._origOnclick || item.onclick;
   });
+  cmsUnbindLinks();
+  cmsLinkClose();
 }
 
 /* ── Speichern ── */
+const CMS_LINKS = 'bruvi-cms-links-v1';
 function cmsSave() {
+  // Texte / HTML
   const data = {};
   document.querySelectorAll('[data-cms]').forEach(el => {
     data[el.dataset.cms] = el.innerHTML;
   });
   localStorage.setItem(CMS_STORE, JSON.stringify(data));
+  // Link-Daten
+  const links = {};
+  document.querySelectorAll('a[href]').forEach((a, i) => {
+    const key = a.dataset.cmsLink || ('link-' + i);
+    a.dataset.cmsLink = key;
+    links[key] = { href: a.href, text: a.textContent, target: a.target };
+  });
+  localStorage.setItem(CMS_LINKS, JSON.stringify(links));
   const msg = document.getElementById('cms-saved-msg');
   msg.classList.add('show');
   setTimeout(() => msg.classList.remove('show'), 2500);
@@ -1805,6 +1868,17 @@ function cmsLoad() {
       Object.entries(idata).forEach(([sel, src]) => {
         const img = document.querySelector(sel);
         if (img) img.src = src;
+      });
+    } catch(e) {}
+  }
+  // Links wiederherstellen
+  const rawLinks = localStorage.getItem(CMS_LINKS);
+  if (rawLinks) {
+    try {
+      const ldata = JSON.parse(rawLinks);
+      Object.entries(ldata).forEach(([key, val]) => {
+        const a = document.querySelector(`a[data-cms-link="${key}"]`);
+        if (a) { a.href = val.href; a.target = val.target || ''; if (val.target) a.rel = 'noopener'; }
       });
     } catch(e) {}
   }
@@ -1858,6 +1932,55 @@ function cmsReset() {
   localStorage.removeItem(CMS_STORE);
   localStorage.removeItem(CMS_IMG);
   location.reload();
+}
+
+/* ── Link-Editor ── */
+let _cmsCurrentLink = null;
+
+function cmsLinkOpen(anchor, e) {
+  e.preventDefault(); e.stopPropagation();
+  _cmsCurrentLink = anchor;
+  document.getElementById('cms-link-text').value   = anchor.textContent.trim();
+  document.getElementById('cms-link-url').value    = anchor.href;
+  document.getElementById('cms-link-target').checked = anchor.target === '_blank';
+  const ed = document.getElementById('cms-link-editor');
+  ed.classList.add('open');
+  // Positionierung neben dem Link
+  const rect = anchor.getBoundingClientRect();
+  let top  = rect.bottom + 8 + window.scrollY;
+  let left = rect.left   + window.scrollX;
+  if (left + 330 > window.innerWidth) left = window.innerWidth - 336;
+  if (top  + 240 > window.innerHeight + window.scrollY) top = rect.top + window.scrollY - 250;
+  ed.style.top  = top  + 'px';
+  ed.style.left = left + 'px';
+  setTimeout(() => document.getElementById('cms-link-url').focus(), 50);
+}
+function cmsLinkApply() {
+  if (!_cmsCurrentLink) return;
+  _cmsCurrentLink.textContent = document.getElementById('cms-link-text').value;
+  _cmsCurrentLink.href        = document.getElementById('cms-link-url').value;
+  _cmsCurrentLink.target      = document.getElementById('cms-link-target').checked ? '_blank' : '';
+  _cmsCurrentLink.rel         = document.getElementById('cms-link-target').checked ? 'noopener' : '';
+  cmsLinkClose();
+  cmsSave();
+}
+function cmsLinkClose() {
+  document.getElementById('cms-link-editor').classList.remove('open');
+  _cmsCurrentLink = null;
+}
+
+// Link-Klicks im Edit-Mode abfangen
+function cmsBindLinks() {
+  document.querySelectorAll('a').forEach(a => {
+    a._cmsLinkHandler = (e) => { if (document.body.classList.contains('cms-active')) cmsLinkOpen(a, e); };
+    a.addEventListener('click', a._cmsLinkHandler);
+  });
+}
+function cmsUnbindLinks() {
+  document.querySelectorAll('a').forEach(a => {
+    if (a._cmsLinkHandler) { a.removeEventListener('click', a._cmsLinkHandler); delete a._cmsLinkHandler; }
+  });
+  cmsLinkClose();
 }
 
 /* ── Keyboard Shortcut Strg+Shift+E ── */
