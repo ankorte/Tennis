@@ -545,7 +545,19 @@
       transform: translateX(-50%);
     }
     @media (max-width: 700px) {
-      .timeline::before { left: 20px; }
+      .timeline::before { left: 16px; }
+      .tl-item, .tl-item:nth-child(even) {
+        flex-direction: column !important;
+        padding-left: 44px;
+        gap: .5rem;
+      }
+      .tl-dot { left: 16px !important; top: .4rem; }
+      .tl-year { flex: none; justify-content: flex-start; padding-top: 0; }
+      .tl-year-badge { font-size: .72rem; }
+      .tl-card { padding: .9rem 1rem; }
+      .tl-card h3 { font-size: .92rem; }
+      .tl-card p { font-size: .85rem; }
+      .tl-img { height: 140px; }
     }
 
     .tl-era {
@@ -607,7 +619,7 @@
     }
 
     .tl-img {
-      width: 100%; height: 180px; object-fit: cover;
+      width: 100%; height: 120px; object-fit: cover;
       border-radius: 8px; margin-bottom: .85rem;
       display: block;
       cursor: zoom-in;
@@ -1874,6 +1886,7 @@ fadeEls.forEach(el => observer.observe(el));
 <style>
   /* ── CMS Trigger ── */
   #cms-fab {
+    display: none; /* Button ausgeblendet – Bearbeitung via Strg+Shift+E */
     position: fixed; bottom: 5rem; right: 1.25rem; z-index: 800;
     width: 44px; height: 44px; border-radius: 50%;
     background: rgba(45,125,70,.15); border: 2px solid rgba(45,125,70,.3);
