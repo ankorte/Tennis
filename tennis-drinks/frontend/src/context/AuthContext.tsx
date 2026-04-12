@@ -6,9 +6,11 @@ interface AuthContextType {
   token: string | null
   login: (token: string, user: User) => void
   logout: () => void
+  updateUser: (updates: Partial<User>) => void
   isAdmin: boolean
   isThekenwart: boolean
   isKassenwart: boolean
+  mustChangePin: boolean
 }
 
 const AuthContext = createContext<AuthContextType>(null!)
@@ -52,12 +54,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
   }
 
+  const updateUser = (updates: Partial<User>) => {
+    setUser(prev => {
+      if (!prev) return prev
+      const updated = { ...prev, ...updates }
+      localStorage.setItem('user', JSON.stringify(updated))
+      return updated
+    })
+  }
+
   const isAdmin = user?.role === 'admin'
   const isKassenwart = user?.role === 'kassenwart' || isAdmin
   const isThekenwart = user?.role === 'thekenwart' || isKassenwart
+  const mustChangePin = user?.must_change_pin === true
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isAdmin, isThekenwart, isKassenwart }}>
+    <AuthContext.Provider value={{ user, token, login, logout, updateUser, isAdmin, isThekenwart, isKassenwart, mustChangePin }}>
       {children}
     </AuthContext.Provider>
   )
