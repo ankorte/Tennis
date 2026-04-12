@@ -528,6 +528,93 @@
     #back-to-top.visible { opacity: 1; transform: none; pointer-events: auto; }
     #back-to-top:hover { background: var(--green-dark); transform: translateY(-2px); }
 
+    /* ── Chronik / Timeline ──────────────────────────── */
+    #chronik { background: var(--bg-alt); }
+    .chronik-intro {
+      text-align: center; max-width: 720px; margin: 0 auto 3.5rem;
+    }
+    .chronik-intro p { color: var(--text-muted); font-size: 1.05rem; line-height: 1.7; }
+
+    .timeline {
+      position: relative; max-width: 860px; margin: 0 auto;
+    }
+    .timeline::before {
+      content: ''; position: absolute;
+      left: 50%; top: 0; bottom: 0; width: 3px;
+      background: linear-gradient(to bottom, var(--green), var(--yellow));
+      transform: translateX(-50%);
+    }
+    @media (max-width: 700px) {
+      .timeline::before { left: 20px; }
+    }
+
+    .tl-era {
+      text-align: center; margin: 2.5rem 0 1.5rem;
+      position: relative; z-index: 1;
+    }
+    .tl-era-label {
+      display: inline-block;
+      background: var(--green); color: #fff;
+      font-size: .85rem; font-weight: 700; letter-spacing: .06em;
+      padding: .35rem 1.2rem; border-radius: 50px;
+    }
+
+    .tl-item {
+      display: flex; gap: 2rem; margin-bottom: 1.75rem;
+      position: relative;
+    }
+    .tl-item:nth-child(even) { flex-direction: row-reverse; }
+    @media (max-width: 700px) {
+      .tl-item, .tl-item:nth-child(even) { flex-direction: column; padding-left: 52px; }
+    }
+
+    .tl-year {
+      flex: 0 0 80px; text-align: center;
+      display: flex; align-items: flex-start; justify-content: center;
+      padding-top: .25rem;
+    }
+    .tl-year-badge {
+      background: var(--green); color: #fff;
+      font-size: .8rem; font-weight: 800;
+      padding: .3rem .6rem; border-radius: 8px;
+      white-space: nowrap;
+    }
+    .tl-dot {
+      position: absolute; left: 50%; top: .55rem;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--yellow); border: 3px solid var(--green);
+      transform: translateX(-50%); z-index: 1;
+    }
+    @media (max-width: 700px) { .tl-dot { left: 20px; } }
+
+    .tl-card {
+      flex: 1; background: var(--card-bg);
+      border-radius: var(--radius); padding: 1.1rem 1.3rem;
+      box-shadow: var(--shadow);
+      border-top: 3px solid var(--green);
+    }
+    .tl-item:nth-child(even) .tl-card { border-top-color: var(--yellow); }
+
+    .tl-card h3 {
+      font-size: 1rem; font-weight: 700; color: var(--text);
+      margin-bottom: .4rem; display: flex; align-items: center; gap: .5rem;
+    }
+    .tl-card p { font-size: .9rem; color: var(--text-muted); line-height: 1.6; margin: 0; }
+    .tl-card .tl-tag {
+      display: inline-block; font-size: .72rem; font-weight: 600;
+      background: var(--green-light); color: var(--green-dark);
+      padding: .15rem .55rem; border-radius: 20px; margin-bottom: .5rem;
+    }
+
+    .chronik-footer-note {
+      text-align: center; margin-top: 3rem;
+      padding: 1.5rem; background: var(--card-bg);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      max-width: 600px; margin-inline: auto;
+    }
+    .chronik-footer-note p { color: var(--text-muted); font-size: .9rem; }
+    .chronik-footer-note strong { color: var(--green); }
+
     /* ── Cookie Banner ───────────────────────────────── */
     #cookie-banner {
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 2000;
@@ -620,6 +707,7 @@
       <li><a href="#termine">Termine</a></li>
       <li><a href="#galerie">Galerie</a></li>
       <li><a href="#faq">FAQ</a></li>
+      <li><a href="#chronik">Chronik</a></li>
       <li><a href="#kontakt">Kontakt</a></li>
       <li><a href="#mitglied" class="nav-cta">Mitglied werden</a></li>
     </ul>
@@ -638,6 +726,7 @@
   <a href="#termine" onclick="closeMobileMenu()">Termine</a>
   <a href="#galerie" onclick="closeMobileMenu()">Galerie</a>
   <a href="#faq" onclick="closeMobileMenu()">FAQ</a>
+  <a href="#chronik" onclick="closeMobileMenu()">Chronik</a>
   <a href="#kontakt" onclick="closeMobileMenu()">Kontakt</a>
   <a href="#mitglied" onclick="closeMobileMenu()" style="background:var(--green);border-radius:50px;padding:.75rem 2rem">Mitglied werden</a>
 </div>
@@ -1319,6 +1408,212 @@
   </div>
 </section>
 
+<!-- ── Chronik ── -->
+<section id="chronik">
+  <div class="container">
+    <div class="section-header fade-in">
+      <span class="section-badge">📖 50 Jahre Tennis BruVi</span>
+      <h2>Vereinschronik</h2>
+      <p>Die Geschichte unserer Tennissparte – von den ersten Planungen bis heute</p>
+    </div>
+
+    <div class="chronik-intro fade-in">
+      <p>Was 1971 mit einer Handvoll Tennisbegeisterter begann, wurde über Jahrzehnte zu einer lebendigen Sportgemeinschaft. Die Tennissparte des TV Bruchhausen-Vilsen blickt auf eine Geschichte voller Leidenschaft, Engagement und unvergesslicher Momente zurück.</p>
+    </div>
+
+    <div class="timeline fade-in">
+
+      <!-- Gründungszeit -->
+      <div class="tl-era"><span class="tl-era-label">⚡ Die Anfänge</span></div>
+
+      <div class="tl-item">
+        <div class="tl-year"><span class="tl-year-badge">1969</span></div>
+        <div class="tl-dot"></div>
+        <div class="tl-card">
+          <span class="tl-tag">Gründerzeit</span>
+          <h3>🎯 Hajo Ahmels übernimmt den TV BruVi</h3>
+          <p>Hajo Ahmels übernimmt als 1. Vorsitzender den TV Bruchhausen-Vilsen – zu einem Zeitpunkt, als der Verein fast aufgelöst werden sollte. Sport wurde nur noch in den Sparten Turnen und Tischtennis betrieben. Ohne sein Engagement wäre der Verein wahrscheinlich nicht überlebt.</p>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-year"><span class="tl-year-badge">1971</span></div>
+        <div class="tl-dot"></div>
+        <div class="tl-card">
+          <span class="tl-tag">Gründung</span>
+          <h3>🎾 Gründung der Tennissparte</h3>
+          <p>Unter dem Dach des TV Bruchhausen-Vilsen wird die Tennissparte gegründet. Zu den Gründungsmitgliedern gehören Ulrich Arzt, Friedhelm Clasen, Wilfried Pfaff sen., Prof. Dr. Uwe Bracht, Klaus-Dieter Witte, Armin Reichelt, Telse Witte sowie Hajo und Ute Ahmels.</p>
+        </div>
+      </div>
+
+      <!-- Die 70er -->
+      <div class="tl-era"><span class="tl-era-label">🟡 Die 70er Jahre</span></div>
+
+      <div class="tl-item">
+        <div class="tl-year"><span class="tl-year-badge">1972</span></div>
+        <div class="tl-dot"></div>
+        <div class="tl-card">
+          <span class="tl-tag">Infrastruktur</span>
+          <h3>🏗️ Bau der ersten zwei Plätze</h3>
+          <p>Die Sparte beginnt mit dem Bau von zwei Asphaltplätzen. Die Mitglieder leisten erhebliche Eigenarbeit. Die Plätze entsprachen zunächst nicht vollständig den DTB-Richtlinien, da der Auslauf hinter den Grundlinien zu kurz war – was Hajo aber nicht weiter störte.</p>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-year"><span class="tl-year-badge">1973</span></div>
+        <div class="tl-dot"></div>
+        <div class="tl-card">
+          <span class="tl-tag">Meilenstein</span>
+          <h3>🏠 Einweihung der Anlage & erstes Clubhaus</h3>
+          <p>Die Tennisanlage wird feierlich eingeweiht. Ein Clubhaus mit zwei Umkleidekabinen, Dusche und langer Theke entsteht in Holzbauweise – und wird schnell zum geselligen Mittelpunkt, besonders bei den Nachbarn vom Schützenverein.</p>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-year"><span class="tl-year-badge">1974</span></div>
+        <div class="tl-dot"></div>
+        <div class="tl-card">
+          <span class="tl-tag">Jugend</span>
+          <h3>👧 Erste Jugendliste</h3>
+          <p>Uschi Biemelt präsentiert die erste Jugendliste der Tennissparte – ein wichtiger Schritt für die Nachwuchsförderung im Verein.</p>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-year"><span class="tl-year-badge">1975</span></div>
+        <div class="tl-dot"></div>
+        <div class="tl-card">
+          <span class="tl-tag">Spielqualität</span>
+          <h3>🔧 Gummigranulat & Garage</h3>
+          <p>Die Asphaltdecke der Plätze wird mit Gummigranulat belegt – was die Zahl der Verletzungen deutlich reduziert. Am 1. Juni umfasst die Mitgliederliste bereits 105 Mitglieder. Eine Beton-Fertiggarage für Gartengeräte entlastet das Clubhaus.</p>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-year"><span class="tl-year-badge">1976</span></div>
+        <div class="tl-dot"></div>
+        <div class="tl-card">
+          <span class="tl-tag">Großes Projekt</span>
+          <h3>💡 Flutlichtanlage & Aufnahmestopp</h3>
+          <p>Durch das große Engagement von Herbert Ehlers wird für 25.000 DM eine Flutlichtanlage installiert. Ab dem 18. Mai können die Plätze auch nach Einbruch der Dunkelheit genutzt werden. Der Andrang ist so groß, dass die Sparte einen Aufnahmestopp beschließt.</p>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-year"><span class="tl-year-badge">1978</span></div>
+        <div class="tl-dot"></div>
+        <div class="tl-card">
+          <span class="tl-tag">Wachstum</span>
+          <h3>👥 200 Mitglieder</h3>
+          <p>Die Sparte zählt inzwischen 200 Mitglieder. Der Aufnahmestopp wird einstimmig aufgehoben. Die Kapazität der zwei Plätze reicht nicht mehr aus – erste Gespräche über einen weiteren Platz werden aufgenommen.</p>
+        </div>
+      </div>
+
+      <!-- Die 80er -->
+      <div class="tl-era"><span class="tl-era-label">🟢 Die 80er Jahre</span></div>
+
+      <div class="tl-item">
+        <div class="tl-year"><span class="tl-year-badge">1982</span></div>
+        <div class="tl-dot"></div>
+        <div class="tl-card">
+          <span class="tl-tag">Modernisierung</span>
+          <h3>🟤 Umwandlung in Rotgranit-Ascheplätze</h3>
+          <p>Die beiden Hartplätze werden in Ascheplätze (Rotgranit) umgewandelt – eine deutliche Verbesserung der Spielqualität. Die Plätze sind täglich ausgebucht.</p>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-year"><span class="tl-year-badge">1983</span></div>
+        <div class="tl-dot"></div>
+        <div class="tl-card">
+          <span class="tl-tag">Führungswechsel</span>
+          <h3>🤝 Herbert Ehlers wird Spartenleiter</h3>
+          <p>Nach dem Rücktritt von Spartenleiterin Dr. Doris Hesse-Turner übernimmt Sportwart Herbert Ehlers die Leitung der Tennissparte. Ihm zur Seite stehen Waltraud Roeder, Karsten Reinkemeyer und weitere engagierte Vorstandsmitglieder. Tag der offenen Tür am 28.4.83.</p>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-year"><span class="tl-year-badge">1983</span></div>
+        <div class="tl-dot"></div>
+        <div class="tl-card">
+          <span class="tl-tag">Gelände</span>
+          <h3>📜 Grundstückskauf – Erweiterung der Anlage</h3>
+          <p>Nach langwierigen Verhandlungen kauft die Gemeinde Bruchhausen-Vilsen ein Teilstück (2.554 qm) aus dem Landschaftsschutzgebiet. Die Minigolfanlage der Familie Pankalla wird umgesiedelt. Der Weg für die Erweiterung der Tennisanlage ist frei.</p>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-year"><span class="tl-year-badge">1986</span></div>
+        <div class="tl-dot"></div>
+        <div class="tl-card">
+          <span class="tl-tag">Meilenstein</span>
+          <h3>🎉 Einweihung des 3. Tennisplatzes</h3>
+          <p>Im Juni wird der dritte Platz (der heutige Platz 1) eingeweiht. Bürgermeister Heinz Klimisch zerschneidet feierlich das Band. Landrat Heinz Zurrmühlen schwärmt: „Die Tennisplätze des TV haben die herrlichste Lage im gesamten Landkreis Diepholz."</p>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-year"><span class="tl-year-badge">1985</span></div>
+        <div class="tl-dot"></div>
+        <div class="tl-card">
+          <span class="tl-tag">Sport</span>
+          <h3>🏆 Aufstieg in die Verbandsliga</h3>
+          <p>Am 28. September gelingt der Mannschaft der Jungsenioren der Aufstieg in die Verbandsliga – ein sportlicher Höhepunkt in der Geschichte der Sparte.</p>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-year"><span class="tl-year-badge">1988</span></div>
+        <div class="tl-dot"></div>
+        <div class="tl-card">
+          <span class="tl-tag">Bauprojekt</span>
+          <h3>🪚 Spatenstich für das neue Clubhaus</h3>
+          <p>Am 27. Juni 1988 greift Herbert Ehlers zum Spaten. Die 160 Jahre alten Balken des Ausspannhauses aus Asendorf wurden in einem einwöchigen Arbeitseinsatz abgebaut. Am 27. August wird Richtfest gefeiert – ein historischer Moment für den Verein.</p>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-year"><span class="tl-year-badge">1989</span></div>
+        <div class="tl-dot"></div>
+        <div class="tl-card">
+          <span class="tl-tag">Abschluss</span>
+          <h3>🏡 Das neue Clubhaus ist fertig</h3>
+          <p>Zum Saisonbeginn 1989 ist das neue Tennis-Vereinsclubhaus bezugsfertig. Herbert Ehlers und Gerhard Jahnel haben rund um die Uhr an den Elektro- und Sanitärarbeiten gearbeitet. Das Gebäude steht auch anderen Sparten für Sitzungen zur Verfügung.</p>
+        </div>
+      </div>
+
+      <!-- Ab 2000 -->
+      <div class="tl-era"><span class="tl-era-label">🔵 Die 2000er & 2010er</span></div>
+
+      <div class="tl-item">
+        <div class="tl-year"><span class="tl-year-badge">2013</span></div>
+        <div class="tl-dot"></div>
+        <div class="tl-card">
+          <span class="tl-tag">Jubiläum</span>
+          <h3>🎊 150 Jahre TV Bruchhausen-Vilsen</h3>
+          <p>Der TV Bruchhausen-Vilsen feiert sein 150-jähriges Bestehen. Die Tennissparte ist mit nunmehr 15 Sparten im Verein eine tragende Säule der Vereinsgemeinschaft.</p>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-year"><span class="tl-year-badge">2021</span></div>
+        <div class="tl-dot"></div>
+        <div class="tl-card">
+          <span class="tl-tag">Großes Jubiläum</span>
+          <h3>🏅 50 Jahre Tennissparte BruVi</h3>
+          <p>Die Tennissparte feiert ihr 50-jähriges Jubiläum. Aus der Zusammenkunft einiger Tennisbegeisterter im Jahr 1971 ist eine lebendige, generationenübergreifende Sportgemeinschaft entstanden – mit modernen Plätzen, aktiver Jugendarbeit und einem Clubhaus mitten im Vilser Holz.</p>
+        </div>
+      </div>
+
+    </div><!-- /.timeline -->
+
+    <div class="chronik-footer-note fade-in">
+      <p>📚 Diese Chronik basiert auf der <strong>Festschrift „50 Jahre Tennissparte BruVi 1971–2021"</strong>. Verfasst mit viel Liebe zum Detail von den Gründern und langjährigen Mitgliedern des Vereins.</p>
+    </div>
+
+  </div>
+</section>
+
 <!-- ── Footer ── -->
 <footer>
   <div class="container">
@@ -1338,6 +1633,7 @@
           <li><a href="#termine">Termine</a></li>
           <li><a href="#galerie">Galerie</a></li>
           <li><a href="#faq">FAQ</a></li>
+          <li><a href="#chronik">Chronik</a></li>
           <li><a href="#kontakt">Kontakt</a></li>
         </ul>
       </div>
