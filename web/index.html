@@ -2055,8 +2055,7 @@ fadeEls.forEach(el => observer.observe(el));
   </div>
 </div>
 
-<!-- CMS Trigger Button -->
-<button id="cms-fab" title="Bearbeitungsmodus (Strg+Shift+E)" onclick="cmsTrigger()">✏️</button>
+<!-- CMS Trigger Button (ausgeblendet – Aktivierung via Strg+Shift+E oder 5x Logo-Klick) -->
 
 <!-- PIN Modal -->
 <div id="cms-pin-overlay">
@@ -2242,10 +2241,8 @@ function cmsExport() {
   cmsSave();
   // Toolbar ausblenden für sauberes HTML
   document.getElementById('cms-toolbar').style.display = 'none';
-  document.getElementById('cms-fab').style.display = 'none';
   const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
   document.getElementById('cms-toolbar').style.display = '';
-  document.getElementById('cms-fab').style.display = '';
 
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const url  = URL.createObjectURL(blob);
