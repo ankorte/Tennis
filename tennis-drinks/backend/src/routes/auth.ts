@@ -53,29 +53,128 @@ router.post('/login', (req: Request, res: Response) => {
   if (!first_name || !last_name || !pin) {
     res.status(400).json({ error: 'Vorname, Nachname und PIN erforderlich' }); return;
   }
+
+  // Mitglied suchen (auch inaktiv um Lockout-Meldungen zu zeigen)
   const member = db.prepare(
-    'SELECT * FROM members WHERE LOWER(first_name) = LOWER(?) AND LOWER(last_name) = LOWER(?) AND active = 1'
+    'SELECT * FROM members WHERE LOWER(first_name) = LOWER(?) AND LOWER(last_name) = LOWER(?)'
   ).get(first_name.trim(), last_name.trim()) as any;
-  if (!member || !bcrypt.compareSync(String(pin), member.pin_hash)) {
-    // Fehlgeschlagenen Login loggen
-    if (member) {
-      db.prepare(`INSERT INTO audit_log (entity_type, entity_id, action, old_value, new_value, created_by) VALUES ('member', ?, 'login_failed', NULL, 'PIN falsch', ?)`).run(member.id, member.id);
+
+  if (!member) {
+    res.status(401).json({ error: 'Ungültige Anmeldedaten' }); return;
+  }
+
+  // Account gesperrt (permanent – locked_until = '9999-...')
+  if (member.active === 0 && member.locked_until === '9999-12-31T23:59:59') {
+    res.status(403).json({ error: '🔒 Account gesperrt. Bitte wende dich an den Administrator.' }); return;
+  }
+
+  // Inaktiver Account (nicht durch Lockout gesperrt)
+  if (member.active === 0) {
+    res.status(401).json({ error: 'Ungültige Anmeldedaten' }); return;
+  }
+
+  // Temporäre Sperrzeit prüfen
+  if (member.locked_until) {
+    const lockedUntil = new Date(member.locked_until).getTime();
+    const remaining = lockedUntil - Date.now();
+    if (remaining > 0) {
+      const seconds = Math.ceil(remaining / 1000);
+      const minutes = Math.ceil(remaining / 60000);
+      res.status(429).json({
+        error: `Zu viele Fehlversuche. Bitte warte noch ${seconds < 60 ? `${seconds} Sekunde${seconds !== 1 ? 'n' : ''}` : `${minutes} Minute${minutes !== 1 ? 'n' : ''}`}.`,
+        locked_until: member.locked_until,
+        remaining_ms: remaining,
+      }); return;
     }
-    res.status(401).json({ error: 'Ungültige Anmeldedaten' });
+  }
+
+  // PIN prüfen
+  const pinCorrect = bcrypt.compareSync(String(pin), member.pin_hash);
+
+  if (!pinCorrect) {
+    const newAttempts = (member.failed_login_attempts || 0) + 1;
+    let lockedUntil: string | null = null;
+    let accountLocked = false;
+
+    if (newAttempts >= 9) {
+      // Permanent sperren
+      accountLocked = true;
+      lockedUntil = '9999-12-31T23:59:59';
+      db.prepare(`UPDATE members SET failed_login_attempts = ?, locked_until = ?, active = 0, updated_at = datetime('now') WHERE id = ?`)
+        .run(newAttempts, lockedUntil, member.id);
+      db.prepare(`INSERT INTO audit_log (entity_type, entity_id, action, old_value, new_value, created_by) VALUES ('member', ?, 'account_locked', NULL, '9 Fehlversuche', ?)`).run(member.id, member.id);
+      res.status(403).json({ error: '🔒 Account gesperrt nach zu vielen Fehlversuchen. Bitte wende dich an den Administrator.' }); return;
+    } else if (newAttempts >= 6) {
+      // 5 Minuten sperren
+      lockedUntil = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+    } else if (newAttempts >= 3) {
+      // 1 Minute sperren
+      lockedUntil = new Date(Date.now() + 1 * 60 * 1000).toISOString();
+    }
+
+    db.prepare(`UPDATE members SET failed_login_attempts = ?, locked_until = ?, updated_at = datetime('now') WHERE id = ?`)
+      .run(newAttempts, lockedUntil, member.id);
+    db.prepare(`INSERT INTO audit_log (entity_type, entity_id, action, old_value, new_value, created_by) VALUES ('member', ?, 'login_failed', NULL, ?, ?)`).run(member.id, `Fehlversuch ${newAttempts}`, member.id);
+
+    if (lockedUntil && !accountLocked) {
+      const remaining = new Date(lockedUntil).getTime() - Date.now();
+      const minutes = Math.ceil(remaining / 60000);
+      res.status(429).json({
+        error: `Zu viele Fehlversuche. Account für ${minutes} Minute${minutes !== 1 ? 'n' : ''} gesperrt.`,
+        locked_until: lockedUntil,
+        remaining_ms: remaining,
+      }); return;
+    }
+
+    const attemptsLeft = newAttempts < 3 ? 3 - newAttempts : newAttempts < 6 ? 6 - newAttempts : 9 - newAttempts;
+    res.status(401).json({ error: `PIN falsch. Noch ${attemptsLeft} Versuch${attemptsLeft !== 1 ? 'e' : ''} vor nächster Sperre.` });
     return;
   }
+
+  // Erfolgreicher Login – Zähler zurücksetzen
+  db.prepare(`UPDATE members SET failed_login_attempts = 0, locked_until = NULL, updated_at = datetime('now') WHERE id = ?`).run(member.id);
+
   const token = jwt.sign(
     { id: member.id, role: member.role, member_number: member.member_number },
     JWT_SECRET, { expiresIn: '24h' }
   );
   res.json({
     token,
+    must_change_pin: member.must_change_pin === 1,
     user: {
       id: member.id, first_name: member.first_name, last_name: member.last_name,
-      email: member.email || '', role: member.role,
-      member_number: member.member_number, team: member.team
+      email: member.email || '', phone: member.phone || '',
+      role: member.role, member_number: member.member_number, team: member.team,
+      must_change_pin: member.must_change_pin === 1,
     }
   });
+});
+
+// Eigenen PIN ändern (authentifiziert, mit aktuellem PIN zur Verifikation)
+router.post('/change-pin', authenticate, (req: AuthRequest, res: Response) => {
+  const { current_pin, new_pin } = req.body;
+  if (!current_pin || !new_pin) {
+    res.status(400).json({ error: 'Aktueller und neuer PIN erforderlich' }); return;
+  }
+  if (String(new_pin).length < 4) {
+    res.status(400).json({ error: 'Neuer PIN muss mindestens 4 Stellen haben' }); return;
+  }
+  const member = db.prepare('SELECT * FROM members WHERE id = ?').get(req.user!.id) as any;
+  if (!member) { res.status(404).json({ error: 'Mitglied nicht gefunden' }); return; }
+
+  if (!bcrypt.compareSync(String(current_pin), member.pin_hash)) {
+    res.status(401).json({ error: 'Aktueller PIN ist falsch' }); return;
+  }
+  if (bcrypt.compareSync(String(new_pin), member.pin_hash)) {
+    res.status(400).json({ error: 'Neuer PIN muss sich vom aktuellen unterscheiden' }); return;
+  }
+
+  const pin_hash = bcrypt.hashSync(String(new_pin), 10);
+  db.prepare(`UPDATE members SET pin_hash = ?, must_change_pin = 0, updated_at = datetime('now') WHERE id = ?`)
+    .run(pin_hash, member.id);
+  db.prepare(`INSERT INTO audit_log (entity_type, entity_id, action, old_value, new_value, created_by) VALUES ('member', ?, 'pin_changed', NULL, 'PIN selbst geändert', ?)`)
+    .run(member.id, member.id);
+  res.json({ message: 'PIN erfolgreich geändert' });
 });
 
 router.get('/me', authenticate, (req: AuthRequest, res: Response) => {
@@ -85,11 +184,26 @@ router.get('/me', authenticate, (req: AuthRequest, res: Response) => {
   res.json(member);
 });
 
+// Hilfsfunktion: nächste freie Mitgliedsnummer vergeben (Format M001, M002, ...)
+function nextMemberNumber(): string {
+  const rows = db.prepare(`SELECT member_number FROM members`).all() as any[];
+  let max = 0;
+  for (const { member_number } of rows) {
+    const match = String(member_number).match(/(\d+)$/);
+    if (match) {
+      const n = parseInt(match[1], 10);
+      if (n > max) max = n;
+    }
+  }
+  const next = max + 1;
+  return `M${String(next).padStart(3, '0')}`;
+}
+
 // Public: self-registration – creates member with active=0 (pending admin approval)
 router.post('/register', (req: Request, res: Response) => {
-  const { member_number, first_name, last_name, email, phone, pin } = req.body;
-  if (!member_number || !first_name || !last_name || !pin) {
-    res.status(400).json({ error: 'Pflichtfelder fehlen (Mitgl.-Nr., Vor-/Nachname, PIN)' }); return;
+  const { first_name, last_name, email, phone, pin } = req.body;
+  if (!first_name || !last_name || !pin) {
+    res.status(400).json({ error: 'Pflichtfelder fehlen (Vor-/Nachname, PIN)' }); return;
   }
   if (String(pin).length < 4) {
     res.status(400).json({ error: 'PIN muss mindestens 4 Stellen haben' }); return;
@@ -100,17 +214,11 @@ router.post('/register', (req: Request, res: Response) => {
     'SELECT id FROM members WHERE LOWER(first_name) = LOWER(?) AND LOWER(last_name) = LOWER(?)'
   ).get(first_name.trim(), last_name.trim()) as any;
   if (existingName) {
-    // Gleiche Erfolgsmeldung – verrät nicht ob Name existiert
     res.json({ message: 'Registrierung eingereicht. Ein Administrator aktiviert deinen Account.' });
     return;
   }
 
-  const existingNr = db.prepare('SELECT id FROM members WHERE member_number = ?').get(member_number) as any;
-  if (existingNr) {
-    res.json({ message: 'Registrierung eingereicht. Ein Administrator aktiviert deinen Account.' });
-    return;
-  }
-
+  const member_number = nextMemberNumber();
   const pin_hash = bcrypt.hashSync(String(pin), 10);
   try {
     db.prepare(`
@@ -119,21 +227,33 @@ router.post('/register', (req: Request, res: Response) => {
     `).run(member_number, first_name.trim(), last_name.trim(), email || null, phone || null, pin_hash);
     res.json({ message: 'Registrierung eingereicht. Ein Administrator aktiviert deinen Account.' });
   } catch (e: any) {
-    // Generische Antwort
     res.json({ message: 'Registrierung eingereicht. Ein Administrator aktiviert deinen Account.' });
   }
 });
 
 // Public: self-service PIN reset – mit Rate-Limit
 router.post('/reset-pin', resetPinLimiter, (req: Request, res: Response) => {
-  const { first_name, last_name, member_number } = req.body;
-  if (!first_name || !last_name || !member_number) {
-    res.status(400).json({ error: 'Vorname, Nachname und Mitgliedsnummer erforderlich' }); return;
+  const { first_name, last_name, email, phone } = req.body;
+  if (!first_name || !last_name || (!email && !phone)) {
+    res.status(400).json({ error: 'Vorname, Nachname und E-Mail-Adresse oder Telefonnummer erforderlich' }); return;
   }
 
-  const member = db.prepare(
-    'SELECT * FROM members WHERE LOWER(first_name) = LOWER(?) AND LOWER(last_name) = LOWER(?) AND member_number = ? AND active = 1'
-  ).get(first_name.trim(), last_name.trim(), member_number) as any;
+  // Erst per E-Mail suchen, falls keine E-Mail dann per Telefon
+  let member: any = null;
+  if (email) {
+    member = db.prepare(
+      'SELECT * FROM members WHERE LOWER(first_name) = LOWER(?) AND LOWER(last_name) = LOWER(?) AND LOWER(email) = LOWER(?) AND active = 1'
+    ).get(first_name.trim(), last_name.trim(), email.trim());
+  }
+  if (!member && phone) {
+    // Telefonnummern normalisieren (nur Ziffern vergleichen)
+    const allMembers = db.prepare(
+      'SELECT * FROM members WHERE LOWER(first_name) = LOWER(?) AND LOWER(last_name) = LOWER(?) AND active = 1'
+    ).all(first_name.trim(), last_name.trim()) as any[];
+    const normalizePhone = (p: string) => p.replace(/\D/g, '');
+    const inputPhone = normalizePhone(phone);
+    member = allMembers.find(m => m.phone && normalizePhone(m.phone) === inputPhone) || null;
+  }
   if (!member) {
     res.status(404).json({ error: 'Kein aktives Mitglied mit diesen Daten gefunden' }); return;
   }

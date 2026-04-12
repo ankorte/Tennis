@@ -20,6 +20,7 @@ const emptyForm = {
   member_number: '', first_name: '', last_name: '', email: '',
   phone: '', status: 'aktiv', role: 'mitglied', team: '', pin: '',
   iban: '', bic: '', mandate_ref: '', mandate_date: '', daily_limit: '',
+  must_change_pin: false,
 }
 
 export default function MembersPage() {
@@ -93,6 +94,7 @@ export default function MembersPage() {
       mandate_ref: m.mandate_ref || '',
       mandate_date: m.mandate_date || '',
       daily_limit: m.daily_limit != null ? String(m.daily_limit) : '',
+      must_change_pin: !!(m as any).must_change_pin,
     })
     setSaveError('')
     setPinResetResult(null)
@@ -355,6 +357,20 @@ export default function MembersPage() {
                   <input value={editForm.pin}
                     onChange={e => setEditForm(f => ({ ...f, pin: e.target.value }))}
                     className="input-field" type="password" placeholder="Neuen PIN eingeben..." maxLength={6} />
+                </div>
+
+                {/* PIN-Änderung erzwingen */}
+                <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-orange-50 border border-orange-200">
+                  <div>
+                    <div className="text-sm font-semibold text-orange-800">🔑 PIN-Änderung erzwingen</div>
+                    <div className="text-xs text-orange-600">Nutzer muss PIN bei nächster Anmeldung ändern</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setEditForm(f => ({ ...f, must_change_pin: !f.must_change_pin }))}
+                    className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${editForm.must_change_pin ? 'bg-orange-500' : 'bg-gray-300'}`}>
+                    <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${editForm.must_change_pin ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                  </button>
                 </div>
 
                 {saveError && <div className="bg-red-50 text-red-700 rounded-xl p-3 text-sm">{saveError}</div>}

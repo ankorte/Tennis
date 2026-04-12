@@ -112,7 +112,8 @@ export default function MyBookingsPage() {
       <div className="flex items-center justify-between gap-2 mb-2 no-print">
         <div className="flex items-center gap-2">
           <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-gray-600 text-xl">←</button>
-          <h1 className="text-2xl font-bold text-tennis-dark">💳 Meine Karte</h1>
+          <img src="/karten-icon.png.png" alt="Karte" className="w-7 h-7 object-contain inline-block" />
+          <h1 className="text-2xl font-bold text-tennis-dark">Meine Karte</h1>
         </div>
         <button onClick={handlePrint}
           className="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-tennis-dark border border-gray-200 rounded-xl px-3 py-1.5 transition-colors">
@@ -134,7 +135,7 @@ export default function MyBookingsPage() {
             <div className="text-3xl font-bold text-white mt-0.5">{balance.toFixed(2)} €</div>
             <div className="text-xs text-white/50 mt-1">{openBookings.length} offene Buchung{openBookings.length !== 1 ? 'en' : ''}</div>
           </div>
-          <div className="text-5xl">💳</div>
+          <img src="/karten-icon.png.png" alt="Karte" className="w-14 h-14 object-contain drop-shadow-lg" />
         </div>
       </div>
 

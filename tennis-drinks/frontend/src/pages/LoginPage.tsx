@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../api'
@@ -9,28 +9,59 @@ export default function LoginPage() {
   const [pin, setPin] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [lockedUntil, setLockedUntil] = useState<Date | null>(null)
+  const [countdown, setCountdown] = useState(0)
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const { login } = useAuth()
   const navigate = useNavigate()
+
+  // Countdown-Timer
+  useEffect(() => {
+    if (!lockedUntil) return
+    const tick = () => {
+      const remaining = Math.max(0, lockedUntil.getTime() - Date.now())
+      setCountdown(Math.ceil(remaining / 1000))
+      if (remaining <= 0) {
+        setLockedUntil(null)
+        setError('')
+        if (countdownRef.current) clearInterval(countdownRef.current)
+      }
+    }
+    tick()
+    countdownRef.current = setInterval(tick, 500)
+    return () => { if (countdownRef.current) clearInterval(countdownRef.current) }
+  }, [lockedUntil])
 
   // PIN-Reset state
   const [showReset, setShowReset] = useState(false)
   const [resetFirstName, setResetFirstName] = useState('')
   const [resetLastName, setResetLastName] = useState('')
-  const [resetMemberNr, setResetMemberNr] = useState('')
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetPhone, setResetPhone] = useState('')
   const [resetLoading, setResetLoading] = useState(false)
   const [resetError, setResetError] = useState('')
   const [resetResult, setResetResult] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (lockedUntil && lockedUntil.getTime() > Date.now()) return
     setLoading(true)
     setError('')
     try {
       const res = await api.post('/auth/login', { first_name: firstName, last_name: lastName, pin })
       login(res.data.token, res.data.user)
       navigate('/')
-    } catch {
-      setError('Name oder PIN falsch')
+    } catch (err: any) {
+      const data = err.response?.data
+      if (err.response?.status === 429 && data?.locked_until) {
+        setLockedUntil(new Date(data.locked_until))
+        setError(data.error || 'Zu viele Fehlversuche.')
+      } else if (err.response?.status === 403) {
+        setError(data?.error || '🔒 Account gesperrt.')
+        setLockedUntil(null)
+      } else {
+        setError(data?.error || 'Name oder PIN falsch')
+      }
     } finally {
       setLoading(false)
     }
@@ -38,6 +69,10 @@ export default function LoginPage() {
 
   const handleResetPin = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!resetEmail && !resetPhone) {
+      setResetError('Bitte E-Mail-Adresse oder Telefonnummer eingeben')
+      return
+    }
     setResetLoading(true)
     setResetError('')
     setResetResult(null)
@@ -45,7 +80,8 @@ export default function LoginPage() {
       const res = await api.post('/auth/reset-pin', {
         first_name: resetFirstName,
         last_name: resetLastName,
-        member_number: resetMemberNr,
+        email: resetEmail || undefined,
+        phone: resetPhone || undefined,
       })
       setResetResult(res.data.temp_pin)
     } catch (e: any) {
@@ -114,19 +150,50 @@ export default function LoginPage() {
                       PIN vergessen?
                     </button>
                   </div>
-                  <input type="password" value={pin} onChange={e => setPin(e.target.value)}
-                    className="input-field text-2xl tracking-widest text-center"
+                  <input type="password" value={pin} onChange={e => { setPin(e.target.value); if (error && !lockedUntil) setError('') }}
+                    className={`input-field text-2xl tracking-widest text-center transition-all ${
+                      error && !lockedUntil && !error.includes('gesperrt') ? 'border-red-400 ring-2 ring-red-200 bg-red-50' : ''
+                    }`}
                     placeholder="••••" maxLength={6} required />
                 </div>
 
                 {error && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 text-center text-sm">
-                    {error}
+                  <div className={`rounded-xl text-center ${
+                    lockedUntil
+                      ? 'bg-orange-50 border-2 border-orange-400 p-4'
+                      : error.includes('gesperrt')
+                        ? 'bg-red-100 border-2 border-red-500 p-4'
+                        : 'bg-red-50 border-2 border-red-300 p-3'
+                  }`}>
+                    {/* Gesperrt-Icon */}
+                    {error.includes('gesperrt') && (
+                      <div className="text-3xl mb-1">🔒</div>
+                    )}
+                    {/* Warnung-Icon bei Lockout */}
+                    {lockedUntil && (
+                      <div className="text-3xl mb-1">⏳</div>
+                    )}
+                    {/* Falscher PIN – großes X */}
+                    {!lockedUntil && !error.includes('gesperrt') && (
+                      <div className="text-2xl mb-1">❌</div>
+                    )}
+                    <p className={`font-bold text-sm ${
+                      lockedUntil ? 'text-orange-800' :
+                      error.includes('gesperrt') ? 'text-red-900' : 'text-red-700'
+                    }`}>{error}</p>
+                    {lockedUntil && countdown > 0 && (
+                      <div className="mt-2 font-black text-3xl text-orange-700 tabular-nums">{
+                        countdown >= 60
+                          ? `${Math.floor(countdown / 60)}:${String(countdown % 60).padStart(2, '0')}`
+                          : `${countdown}s`
+                      }</div>
+                    )}
                   </div>
                 )}
 
-                <button type="submit" className="btn-primary mt-2" disabled={loading}>
-                  {loading ? 'Anmelden...' : 'Anmelden'}
+                <button type="submit" className="btn-primary mt-2"
+                  disabled={loading || (!!lockedUntil && countdown > 0)}>
+                  {loading ? 'Anmelden...' : lockedUntil && countdown > 0 ? `Gesperrt (${countdown}s)` : 'Anmelden'}
                 </button>
               </form>
 
@@ -168,7 +235,8 @@ export default function LoginPage() {
               ) : (
                 <form onSubmit={handleResetPin} className="space-y-4">
                   <p className="text-xs text-gray-500">
-                    Gib deinen Namen und deine Mitgliedsnummer ein. Wir setzen deinen PIN auf einen neuen temporären Wert zurück.
+                    Gib deinen Namen und entweder deine E-Mail-Adresse <strong>oder</strong> Telefonnummer ein.
+                    Dein PIN wird auf einen temporären Wert zurückgesetzt.
                   </p>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
@@ -183,9 +251,19 @@ export default function LoginPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Mitgliedsnummer</label>
-                    <input value={resetMemberNr} onChange={e => setResetMemberNr(e.target.value)}
-                      className="input-field" placeholder="z. B. M042" required />
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">E-Mail-Adresse</label>
+                    <input type="email" value={resetEmail} onChange={e => { setResetEmail(e.target.value); setResetError('') }}
+                      className="input-field" placeholder="deine@email.de" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-px bg-gray-200" />
+                    <span className="text-xs text-gray-400 font-medium">oder</span>
+                    <div className="flex-1 h-px bg-gray-200" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Telefonnummer</label>
+                    <input type="tel" value={resetPhone} onChange={e => { setResetPhone(e.target.value); setResetError('') }}
+                      className="input-field" placeholder="0171 12345678" />
                   </div>
 
                   {resetError && (

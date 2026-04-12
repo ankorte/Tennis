@@ -45,11 +45,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const { showToast } = useToast()
   const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const initialLoadDone = useRef(false)
+  const pendingLocalWrite = useRef(false) // blockiert Poll-Überschreiben während lokaler Änderung
 
   // Vom Server laden (einmalig nach Login / wenn Token vorhanden)
   const loadFromServer = useCallback(async () => {
     const token = localStorage.getItem('token')
     if (!token || !isOnline) return
+    // Nicht überschreiben, solange lokale Änderung noch nicht gespeichert wurde
+    if (pendingLocalWrite.current) return
     try {
       setCartLoading(true)
       const { data } = await api.get('/cart')
@@ -103,16 +106,38 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     wasOfflineRef.current = !isOnline
   }, [isOnline, loadFromServer])
 
+  // PWA: Wenn App aus Hintergrund in Vordergrund kommt → sofort neu laden
+  useEffect(() => {
+    const onVisible = () => {
+      if (!document.hidden && isOnline) {
+        loadFromServer()
+      }
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [isOnline, loadFromServer])
+
+  // Polling: alle 60s den Cart vom Server neu laden (z. B. nach Nacht-Auto-Checkout)
+  useEffect(() => {
+    if (!isOnline) return
+    const interval = setInterval(() => {
+      loadFromServer()
+    }, 60_000)
+    return () => clearInterval(interval)
+  }, [isOnline, loadFromServer])
+
   // Debounced Server-Sync (500ms nach letzter Änderung)
   const scheduleSyncToServer = useCallback((newItems: CartItem[]) => {
+    pendingLocalWrite.current = true
     if (syncTimerRef.current) clearTimeout(syncTimerRef.current)
     syncTimerRef.current = setTimeout(async () => {
-      if (!isOnline) return
+      if (!isOnline) { pendingLocalWrite.current = false; return }
       try {
         await api.put('/cart', {
           items: newItems.map(i => ({ drink_id: i.drink.id, quantity: i.quantity }))
         })
       } catch {}
+      pendingLocalWrite.current = false
     }, 500)
   }, [isOnline])
 

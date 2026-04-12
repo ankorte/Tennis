@@ -174,6 +174,10 @@ export function initializeDatabase(): void {
   try { db.exec(`ALTER TABLE drinks ADD COLUMN image_url TEXT`) } catch {}
   // Tages-Limit pro Mitglied (nullable = kein Limit)
   try { db.exec(`ALTER TABLE members ADD COLUMN daily_limit REAL`) } catch {}
+  // Login-Sicherheit
+  try { db.exec(`ALTER TABLE members ADD COLUMN failed_login_attempts INTEGER NOT NULL DEFAULT 0`) } catch {}
+  try { db.exec(`ALTER TABLE members ADD COLUMN locked_until TEXT`) } catch {}
+  try { db.exec(`ALTER TABLE members ADD COLUMN must_change_pin INTEGER NOT NULL DEFAULT 0`) } catch {}
 
   // Migration: FK-Referenzen auf members_old reparieren (Folge der Email-UNIQUE-Migration)
   // SQLite aktualisiert bei RENAME TABLE automatisch FK-Referenzen in anderen Tabellen –

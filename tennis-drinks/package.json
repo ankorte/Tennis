@@ -1,10 +1,13 @@
 {
   "name": "tv-bruvi-getraenke",
-  "version": "1.0.68",
+  "version": "1.0.90",
   "scripts": {
     "start": "bash startup.sh"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "docx": "^9.6.1"
   }
 }

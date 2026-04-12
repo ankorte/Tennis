@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TV Bruvi – Anleitung</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0F2566; font-family: Arial, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
+
+  .stage { position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+
+  /* Slide container */
+  .slide { position: absolute; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.6s ease; pointer-events: none; }
+  .slide.active { opacity: 1; pointer-events: all; }
+
+  /* Phone mockup */
+  .phone { width: 360px; height: 720px; background: white; border-radius: 36px; box-shadow: 0 30px 80px rgba(0,0,0,0.5); overflow: hidden; position: relative; border: 6px solid #1a1a2e; flex-shrink: 0; }
+  .phone-notch { width: 120px; height: 20px; background: #1a1a2e; border-radius: 0 0 12px 12px; position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 10; }
+  .phone-screen { width: 100%; height: 100%; overflow: hidden; position: relative; }
+
+  /* Sidebar */
+  .sidebar { width: 320px; margin-left: 40px; color: white; flex-shrink: 0; }
+  .step-badge { display: inline-block; background: #E8002D; color: white; font-size: 13px; font-weight: 900; padding: 4px 14px; border-radius: 20px; margin-bottom: 12px; }
+  .sidebar h2 { font-size: 28px; font-weight: 900; line-height: 1.2; margin-bottom: 14px; }
+  .sidebar p { font-size: 15px; color: rgba(255,255,255,0.75); line-height: 1.6; margin-bottom: 18px; }
+  .tip-box { background: rgba(255,255,255,0.1); border-left: 4px solid #E8002D; border-radius: 8px; padding: 12px 16px; font-size: 14px; color: rgba(255,255,255,0.9); line-height: 1.5; }
+
+  /* Progress dots */
+  .dots { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 100; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.3); cursor: pointer; transition: all 0.3s; }
+  .dot.active { background: #E8002D; transform: scale(1.3); }
+
+  /* Nav buttons */
+  .nav-btn { position: fixed; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.15); border: none; color: white; font-size: 22px; width: 48px; height: 48px; border-radius: 50%; cursor: pointer; z-index: 100; transition: background 0.2s; display: flex; align-items: center; justify-content: center; }
+  .nav-btn:hover { background: rgba(255,255,255,0.3); }
+  .nav-prev { left: 20px; }
+  .nav-next { right: 20px; }
+
+  /* Progress bar */
+  .progress { position: fixed; top: 0; left: 0; height: 4px; background: #E8002D; transition: width 0.6s ease; z-index: 100; }
+
+  /* Slide counter */
+  .counter { position: fixed; top: 16px; right: 20px; color: rgba(255,255,255,0.5); font-size: 13px; z-index: 100; }
+
+  /* Auto-play indicator */
+  .autoplay-btn { position: fixed; top: 12px; left: 20px; background: rgba(255,255,255,0.15); border: none; color: white; font-size: 13px; padding: 6px 14px; border-radius: 20px; cursor: pointer; z-index: 100; }
+
+  /* ── APP SCREENS ── */
+
+  /* Login */
+  .screen-login { background: linear-gradient(160deg, #1A3B8F 0%, #0F2566 60%, #E8002D 100%); padding: 20px; display: flex; align-items: center; justify-content: center; height: 100%; }
+  .login-card { background: white; border-radius: 24px; overflow: hidden; width: 100%; max-width: 300px; }
+  .login-header { background: linear-gradient(135deg, #1A3B8F, #0F2566); padding: 24px 20px; text-align: center; }
+  .logo-circle { width: 64px; height: 64px; border-radius: 50%; background: white; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+  .login-header h1 { color: white; font-size: 16px; font-weight: 900; }
+  .login-header p { color: #FF9DB5; font-size: 11px; margin-top: 2px; }
+  .badge-red { display: inline-block; background: #E8002D; color: white; font-size: 10px; padding: 3px 10px; border-radius: 20px; margin-top: 6px; }
+  .red-bar { height: 3px; background: #E8002D; }
+  .login-body { padding: 18px 16px; }
+  .field-label { font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 4px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .field-input { background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 10px; padding: 9px 12px; font-size: 13px; color: #94A3B8; width: 100%; }
+  .btn-main { background: #E8002D; color: white; font-weight: 900; font-size: 14px; border: none; border-radius: 12px; padding: 13px; width: 100%; cursor: pointer; margin-top: 4px; }
+  .pin-row { position: relative; margin-bottom: 12px; }
+  .pin-forgot { position: absolute; right: 0; top: -4px; font-size: 11px; color: #1A3B8F; font-weight: 600; }
+  .typing-cursor { display: inline-block; width: 2px; height: 16px; background: #1A3B8F; animation: blink 1s infinite; vertical-align: middle; margin-left: 2px; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* Highlight animation */
+  .highlight { animation: highlight-pulse 1s ease-in-out 0.3s 2; }
+  @keyframes highlight-pulse { 0%,100%{box-shadow:none} 50%{box-shadow:0 0 0 3px #E8002D88} }
+
+  /* Dashboard */
+  .screen-dash { background: #F1F5F9; height: 100%; display: flex; flex-direction: column; }
+  .app-header { background: linear-gradient(90deg, #1A3B8F, #0F2566); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; }
+  .app-header .logo { width: 32px; height: 32px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .app-header .title { color: white; font-size: 13px; font-weight: 900; margin-left: 8px; }
+  .app-header .subtitle { color: rgba(255,255,255,0.6); font-size: 9px; }
+  .app-header .user { color: white; font-size: 11px; text-align: right; }
+  .header-left { display: flex; align-items: center; }
+  .app-content { flex: 1; overflow-y: auto; padding: 14px; }
+  .welcome { font-size: 18px; font-weight: 900; color: #1E293B; margin-bottom: 2px; }
+  .welcome-sub { font-size: 11px; color: #64748B; margin-bottom: 14px; }
+  .section-label { font-size: 10px; font-weight: 900; color: #94A3B8; letter-spacing: 1px; margin-bottom: 8px; }
+  .quick-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .quick-card { background: white; border-radius: 12px; padding: 10px 8px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .quick-card .q-icon { font-size: 22px; }
+  .quick-card .q-name { font-size: 11px; font-weight: 700; color: #1E293B; margin-top: 4px; }
+  .quick-card .q-price { font-size: 12px; font-weight: 900; color: #E8002D; }
+  .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .action-card { background: white; border-radius: 14px; padding: 16px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .action-card .a-icon { font-size: 28px; }
+  .action-card .a-label { font-size: 12px; font-weight: 700; color: #1A3B8F; margin-top: 6px; }
+  .balance-card { background: linear-gradient(135deg, #1A3B8F, #0F2566); border-radius: 14px; padding: 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .balance-label { font-size: 11px; color: rgba(255,255,255,0.6); }
+  .balance-amount { font-size: 26px; font-weight: 900; color: white; }
+  .bottom-nav { background: white; border-top: 2px solid #E8002D; padding: 8px 0 4px; display: flex; justify-content: space-around; }
+  .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #94A3B8; padding: 4px 8px; }
+  .nav-item.active { color: #16A34A; }
+  .nav-item span:first-child { font-size: 20px; margin-bottom: 2px; }
+
+  /* Drinks page */
+  .screen-drinks { background: #F1F5F9; height: 100%; display: flex; flex-direction: column; }
+  .page-title { font-size: 20px; font-weight: 900; color: #1E293B; }
+  .page-header { padding: 12px 14px 8px; display: flex; align-items: center; justify-content: space-between; }
+  .cart-badge { background: #1A3B8F; color: white; font-size: 11px; font-weight: 900; padding: 5px 12px; border-radius: 20px; }
+  .cats { display: flex; gap: 6px; padding: 0 14px 10px; overflow-x: auto; }
+  .cat-btn { background: #E2E8F0; color: #64748B; font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 20px; white-space: nowrap; border: none; }
+  .cat-btn.active { background: #1A3B8F; color: white; }
+  .search-box { margin: 0 14px 10px; background: white; border-radius: 12px; padding: 9px 14px; font-size: 12px; color: #94A3B8; border: 1.5px solid #E2E8F0; display: flex; align-items: center; gap: 6px; }
+  .drinks-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 14px; flex: 1; overflow-y: auto; }
+  .drink-card { background: white; border-radius: 14px; padding: 12px; position: relative; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .drink-card .d-icon { font-size: 26px; margin-bottom: 6px; }
+  .drink-card .d-name { font-size: 13px; font-weight: 700; color: #1E293B; }
+  .drink-card .d-price { font-size: 14px; font-weight: 900; color: #E8002D; margin-top: 2px; }
+  .drink-card .d-stock { font-size: 10px; color: #94A3B8; margin-top: 2px; }
+  .drink-card .d-count { position: absolute; top: 8px; right: 8px; background: #1A3B8F; color: white; font-size: 11px; font-weight: 900; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .cart-bar { background: #E8002D; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; color: white; font-size: 12px; font-weight: 700; }
+
+  /* Cart page */
+  .screen-cart { background: #F1F5F9; height: 100%; display: flex; flex-direction: column; }
+  .cart-header { padding: 14px 16px 0; display: flex; align-items: center; justify-content: space-between; }
+  .cart-title { font-size: 20px; font-weight: 900; color: #1E293B; display: flex; align-items: center; gap: 8px; }
+  .cart-clear { font-size: 12px; color: #E8002D; font-weight: 600; }
+  .cart-items { padding: 14px; flex: 1; overflow-y: auto; }
+  .cart-item { background: white; border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+  .item-info { flex: 1; }
+  .item-name { font-size: 14px; font-weight: 700; color: #1E293B; }
+  .item-sub { font-size: 11px; color: #94A3B8; margin-top: 2px; }
+  .item-qty { display: flex; align-items: center; gap: 8px; }
+  .qty-btn { width: 28px; height: 28px; border-radius: 50%; border: none; font-size: 16px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .qty-minus { background: #F1F5F9; color: #475569; }
+  .qty-plus { background: #1A3B8F; color: white; }
+  .item-price { font-size: 14px; font-weight: 900; color: #E8002D; text-align: right; min-width: 54px; }
+  .total-card { margin: 0 14px; background: #1A3B8F; border-radius: 14px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .total-label { color: rgba(255,255,255,0.7); font-size: 12px; }
+  .total-amount { font-size: 26px; font-weight: 900; color: white; }
+  .booking-section { padding: 0 14px 10px; }
+  .booking-label { font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 8px; }
+  .booking-opts { display: flex; gap: 8px; }
+  .booking-opt { flex: 1; padding: 8px; border-radius: 10px; border: 1.5px solid #E2E8F0; font-size: 11px; font-weight: 700; text-align: center; background: white; color: #64748B; }
+  .booking-opt.active { background: #1A3B8F; color: white; border-color: #1A3B8F; }
+  .btn-checkout { background: #E8002D; color: white; font-size: 15px; font-weight: 900; border: none; border-radius: 14px; padding: 15px; width: calc(100% - 28px); margin: 0 14px 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+  /* Success screen */
+  .screen-success { background: #F1F5F9; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
+  .success-icon { font-size: 64px; margin-bottom: 16px; animation: pop 0.5s ease 0.2s both; }
+  @keyframes pop { 0%{transform:scale(0)} 80%{transform:scale(1.15)} 100%{transform:scale(1)} }
+  .success-title { font-size: 22px; font-weight: 900; color: #16A34A; margin-bottom: 8px; }
+  .success-sub { font-size: 13px; color: #64748B; text-align: center; line-height: 1.5; margin-bottom: 20px; }
+  .btn-undo { background: white; border: 2px solid #E8002D; color: #E8002D; font-size: 13px; font-weight: 700; border-radius: 12px; padding: 10px 20px; cursor: pointer; }
+
+  /* My Bookings */
+  .screen-karte { background: #F1F5F9; height: 100%; display: flex; flex-direction: column; }
+  .karte-items { padding: 10px 14px; flex: 1; overflow-y: auto; }
+  .booking-item { background: white; border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+  .b-name { font-size: 13px; font-weight: 700; color: #1E293B; }
+  .b-sub { font-size: 11px; color: #94A3B8; margin-top: 2px; }
+  .b-price { font-size: 14px; font-weight: 900; color: #E8002D; }
+  .b-status { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+  .status-open { background: #DCFCE7; color: #16A34A; }
+  .b-right { text-align: right; }
+  .stats-card { margin: 10px 14px; background: white; border-radius: 14px; padding: 14px; }
+  .stats-row { display: flex; gap: 10px; }
+  .stat-box { flex: 1; text-align: center; }
+  .stat-num { font-size: 20px; font-weight: 900; color: #1A3B8F; }
+  .stat-lbl { font-size: 10px; color: #94A3B8; }
+
+  /* Profile */
+  .screen-profile { background: #F1F5F9; height: 100%; display: flex; flex-direction: column; }
+  .profile-header-card { background: linear-gradient(135deg, #1A3B8F, #0F2566); margin: 12px 14px; border-radius: 14px; padding: 16px; display: flex; align-items: center; gap: 12px; }
+  .avatar { width: 48px; height: 48px; border-radius: 50%; background: #E8002D; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; color: white; flex-shrink: 0; }
+  .profile-name { color: white; font-size: 16px; font-weight: 900; }
+  .profile-meta { color: rgba(255,255,255,0.6); font-size: 11px; margin-top: 2px; }
+  .form-section { background: white; margin: 0 14px 12px; border-radius: 14px; padding: 14px; }
+  .form-section h3 { font-size: 14px; font-weight: 900; color: #1A3B8F; margin-bottom: 12px; }
+  .form-field { margin-bottom: 10px; }
+  .form-field label { font-size: 11px; font-weight: 700; color: #64748B; display: block; margin-bottom: 4px; }
+  .form-field input { width: 100%; background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 10px; padding: 9px 12px; font-size: 13px; color: #475569; }
+  .btn-save { background: #E8002D; color: white; font-size: 13px; font-weight: 900; border: none; border-radius: 12px; padding: 12px; width: 100%; cursor: pointer; margin-top: 4px; }
+
+  /* Title slide */
+  .screen-title { background: linear-gradient(160deg, #1A3B8F 0%, #0F2566 60%, #E8002D 100%); height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 30px; }
+  .title-logo { width: 80px; height: 80px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+  .title-main { font-size: 32px; font-weight: 900; line-height: 1.15; margin-bottom: 10px; }
+  .title-sub { font-size: 16px; color: rgba(255,255,255,0.7); margin-bottom: 28px; }
+  .title-chapters { text-align: left; width: 100%; max-width: 280px; }
+  .chapter { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 14px; color: rgba(255,255,255,0.85); }
+  .ch-nr { width: 24px; height: 24px; background: #E8002D; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; flex-shrink: 0; }
+
+  /* Breathing animation on active slide elements */
+  .anim-tap { animation: tap-indicate 2s ease-in-out 1s infinite; }
+  @keyframes tap-indicate { 0%,100%{transform:scale(1)} 50%{transform:scale(0.96)} }
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+
+  <!-- Progress bar -->
+  <div class="progress" id="progress"></div>
+  <div class="counter" id="counter"></div>
+  <button class="autoplay-btn" id="autoPlayBtn" onclick="toggleAutoPlay()">⏸ Auto</button>
+  <button class="nav-btn nav-prev" onclick="prevSlide()">‹</button>
+  <button class="nav-btn nav-next" onclick="nextSlide()">›</button>
+  <div class="dots" id="dots"></div>
+
+  <!-- ═══ SLIDE 0: Titel ═══ -->
+  <div class="slide active">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="screen-title">
+          <div class="title-logo">🎾</div>
+          <div class="title-main">TV Bruvi<br>Getränke-App</div>
+          <div class="title-sub">Schritt-für-Schritt Anleitung</div>
+          <div class="title-chapters">
+            <div class="chapter"><div class="ch-nr">1</div> Anmelden</div>
+            <div class="chapter"><div class="ch-nr">2</div> Getränk auswählen</div>
+            <div class="chapter"><div class="ch-nr">3</div> Buchen & Bestätigen</div>
+            <div class="chapter"><div class="ch-nr">4</div> Meine Karte</div>
+            <div class="chapter"><div class="ch-nr">5</div> PIN ändern</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar">
+      <div class="step-badge">Willkommen</div>
+      <h2>TV Bruvi<br>Getränke-App</h2>
+      <p>Diese Anleitung zeigt dir Schritt für Schritt, wie du die App benutzt — vom Einloggen bis zur Buchung.</p>
+      <div class="tip-box">🎾 Die App läuft auf jedem Smartphone und PC — du kannst sie auch auf deinem Homebildschirm speichern.</div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 1: Login leer ═══ -->
+  <div class="slide">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="screen-login">
+          <div class="login-card">
+            <div class="login-header">
+              <div class="logo-circle">🎾</div>
+              <h1>TV Bruvi</h1>
+              <p>TV Bruchhausen-Vilsen v. 1863 e.V.</p>
+              <div class="badge-red">🎾 Getränke · Sparte Tennis</div>
+            </div>
+            <div class="red-bar"></div>
+            <div class="login-body">
+              <div class="field-row">
+                <div>
+                  <div class="field-label">Vorname</div>
+                  <div class="field-input highlight" style="color:#1E293B">Max</div>
+                </div>
+                <div>
+                  <div class="field-label">Nachname</div>
+                  <div class="field-input highlight" style="color:#1E293B">Mustermann</div>
+                </div>
+              </div>
+              <div class="pin-row">
+                <div class="field-label">PIN <span class="pin-forgot">PIN vergessen?</span></div>
+                <div class="field-input highlight" style="text-align:center;font-size:18px;letter-spacing:6px;color:#1E293B">••••<span class="typing-cursor"></span></div>
+              </div>
+              <button class="btn-main">Anmelden</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar">
+      <div class="step-badge">Schritt 1 von 5</div>
+      <h2>Anmelden</h2>
+      <p>Öffne die TV Bruvi App im Browser und gib deinen <strong style="color:white">Vor- und Nachnamen</strong> ein — genauso wie du beim Verein registriert bist.</p>
+      <p>Anschließend gibst du deinen <strong style="color:white">4–6-stelligen PIN</strong> ein und tippst auf „Anmelden".</p>
+      <div class="tip-box">💡 Noch kein Account? Tippe auf „Jetzt registrieren" — ein Administrator schaltet deinen Account dann frei.</div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 2: Dashboard ═══ -->
+  <div class="slide">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="screen-dash">
+          <div class="app-header">
+            <div class="header-left">
+              <div class="logo">🎾</div>
+              <div style="margin-left:8px">
+                <div class="title">TV Bruvi</div>
+                <div class="subtitle">Getränke · Sparte Tennis</div>
+              </div>
+            </div>
+            <div class="user">Max Mustermann<br><span style="color:#E8002D;font-size:10px">Abmelden</span></div>
+          </div>
+          <div class="app-content">
+            <div class="welcome">Hallo, Max! 👋</div>
+            <div class="welcome-sub">TV Bruvi – Sparte Tennis</div>
+            <div class="section-label">⚡ SCHNELLBUCHUNG</div>
+            <div class="quick-grid">
+              <div class="quick-card"><div class="q-icon">🍺</div><div class="q-name">Pils</div><div class="q-price">2.80 €</div></div>
+              <div class="quick-card"><div class="q-icon">🥤</div><div class="q-name">Apfelsaft</div><div class="q-price">2.00 €</div></div>
+              <div class="quick-card"><div class="q-icon">🥤</div><div class="q-name">Fanta</div><div class="q-price">2.50 €</div></div>
+            </div>
+            <div class="action-grid">
+              <div class="action-card anim-tap" style="border:2px solid #1A3B8F"><div class="a-icon">🍺</div><div class="a-label">Getränk eintragen</div></div>
+              <div class="action-card"><div class="a-icon">📋</div><div class="a-label">Meine Karte</div></div>
+            </div>
+            <div class="balance-card">
+              <div><div class="balance-label">Offener Betrag</div><div class="balance-amount">12.40 €</div></div>
+              <span style="font-size:28px">📋</span>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item active"><span>🏠</span>Start</div>
+            <div class="nav-item"><span>🍺</span>Eintragen</div>
+            <div class="nav-item"><span>📋</span>Karte</div>
+            <div class="nav-item"><span>☰</span>Mehr</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar">
+      <div class="step-badge">Startseite</div>
+      <h2>Dein Dashboard</h2>
+      <p>Nach dem Login siehst du die Startseite. Hier findest du die <strong style="color:white">Schnellbuchung</strong> für deine beliebtesten Getränke und deinen aktuellen offenen Betrag.</p>
+      <p>Unten in der Navigation erreichst du alle Bereiche der App.</p>
+      <div class="tip-box">🏠 Start &nbsp;|&nbsp; 🍺 Eintragen &nbsp;|&nbsp; 📋 Karte &nbsp;|&nbsp; ☰ Mehr</div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 3: Getränke ═══ -->
+  <div class="slide">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="screen-drinks">
+          <div class="app-header">
+            <div class="header-left">
+              <div class="logo">🎾</div>
+              <div style="margin-left:8px"><div class="title">TV Bruvi</div></div>
+            </div>
+            <div class="cart-badge">🛒 2 – 5.60 €</div>
+          </div>
+          <div class="page-header">
+            <div class="page-title">🍺 Getränke</div>
+          </div>
+          <div class="cats">
+            <button class="cat-btn active">🍽 Alle</button>
+            <button class="cat-btn">⭐ Favoriten</button>
+            <button class="cat-btn">💧 Wasser</button>
+            <button class="cat-btn">🥤 Soft</button>
+            <button class="cat-btn">🍺 Bier</button>
+          </div>
+          <div class="search-box">🔍 &nbsp;Getränk suchen...</div>
+          <div class="drinks-grid">
+            <div class="drink-card">
+              <div class="d-count">2</div>
+              <div class="d-icon">🍺</div>
+              <div class="d-name">Pils</div>
+              <div class="d-price">2.80 €</div>
+              <div class="d-stock">⭐ 11× bestellt</div>
+            </div>
+            <div class="drink-card">
+              <div class="d-icon">🍺</div>
+              <div class="d-name">Weizen</div>
+              <div class="d-price">3.00 €</div>
+              <div class="d-stock">8 Flaschen</div>
+            </div>
+            <div class="drink-card" style="border:2px solid #E8002D">
+              <div class="d-icon">☕</div>
+              <div class="d-name">Kaffee</div>
+              <div class="d-price">2.00 €</div>
+              <div class="d-stock">35 Tassen</div>
+            </div>
+            <div class="drink-card">
+              <div class="d-icon">🥤</div>
+              <div class="d-name">Apfelsaft</div>
+              <div class="d-price">2.00 €</div>
+              <div class="d-stock">⭐ 5× bestellt</div>
+            </div>
+          </div>
+          <div class="cart-bar">
+            <div>🛒 2 ungebuchte Getränke<br><span style="font-weight:400;font-size:10px">Tippen zum Abschließen</span></div>
+            <div>5.60 € →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar">
+      <div class="step-badge">Schritt 2 von 5</div>
+      <h2>Getränk auswählen</h2>
+      <p>Tippe auf „Eintragen" und wähle dein Getränk aus. Nutze die <strong style="color:white">Kategorie-Tabs</strong> oder die <strong style="color:white">Suchleiste</strong>.</p>
+      <p>Ein Tipp auf eine Karte legt das Getränk in den Warenkorb — die Zahl oben rechts zeigt die aktuelle Menge.</p>
+      <div class="tip-box">⭐ Halte ein Getränk gedrückt, um es als Favoriten zu speichern — dann erscheint es immer ganz oben!</div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 4: Warenkorb ═══ -->
+  <div class="slide">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="screen-cart">
+          <div class="app-header">
+            <div class="header-left">
+              <div class="logo">🎾</div>
+              <div style="margin-left:8px"><div class="title">TV Bruvi</div></div>
+            </div>
+            <div class="cart-badge">🛒 3 – 8.10 €</div>
+          </div>
+          <div class="cart-header">
+            <div class="cart-title">🛒 Warenkorb</div>
+            <div class="cart-clear">Leeren</div>
+          </div>
+          <div class="cart-items">
+            <div class="cart-item">
+              <div class="item-info"><div class="item-name">Pils</div><div class="item-sub">Bier · 2.80 € / Stk.</div></div>
+              <div class="item-qty"><button class="qty-btn qty-minus">−</button><span style="font-size:15px;font-weight:900">2</span><button class="qty-btn qty-plus">+</button></div>
+              <div class="item-price">5.60 €<br><span style="font-size:10px;color:#94A3B8">entfernen</span></div>
+            </div>
+            <div class="cart-item">
+              <div class="item-info"><div class="item-name">Cola</div><div class="item-sub">Softdrinks · 2.50 € / Stk.</div></div>
+              <div class="item-qty"><button class="qty-btn qty-minus">−</button><span style="font-size:15px;font-weight:900">1</span><button class="qty-btn qty-plus">+</button></div>
+              <div class="item-price">2.50 €<br><span style="font-size:10px;color:#94A3B8">entfernen</span></div>
+            </div>
+            <div class="total-card">
+              <div><div class="total-label">3 Artikel</div><div class="total-amount">8.10 €</div></div>
+              <span style="font-size:28px">📋</span>
+            </div>
+            <div class="booking-section">
+              <div class="booking-label">Eintragen auf</div>
+              <div class="booking-opts">
+                <div class="booking-opt active">👤 Auf mich</div>
+                <div class="booking-opt">👥 Aufteilen</div>
+                <div class="booking-opt">🔄 Andere</div>
+              </div>
+            </div>
+          </div>
+          <button class="btn-checkout anim-tap">✓ Alle eintragen (8.10 €)</button>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar">
+      <div class="step-badge">Schritt 3 von 5</div>
+      <h2>Buchen &amp; Bestätigen</h2>
+      <p>Im Warenkorb siehst du alle gewählten Getränke. Passe die Menge mit <strong style="color:white">+ und −</strong> an.</p>
+      <p>Tippe auf den roten Button <strong style="color:#ff9db5">„✓ Alle eintragen"</strong>, um die Buchung abzuschließen.</p>
+      <div class="tip-box">↩️ Falls du versehentlich gebucht hast: direkt danach auf „Stornieren" tippen — die Artikel kommen zurück in den Warenkorb.</div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 5: Erfolg ═══ -->
+  <div class="slide">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="screen-cart">
+          <div class="app-header">
+            <div class="header-left">
+              <div class="logo">🎾</div>
+              <div style="margin-left:8px"><div class="title">TV Bruvi</div></div>
+            </div>
+          </div>
+          <div class="screen-success" style="flex:1">
+            <div class="success-icon">✅</div>
+            <div class="success-title">Buchung erfolgreich!</div>
+            <div class="success-sub">3 Getränke wurden auf deine Karte eingetragen.<br><br>Pils ×2 · Cola ×1</div>
+            <button class="btn-undo">↩ Stornieren</button>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item"><span>🏠</span>Start</div>
+            <div class="nav-item active"><span>🍺</span>Eintragen</div>
+            <div class="nav-item"><span>📋</span>Karte</div>
+            <div class="nav-item"><span>☰</span>Mehr</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar">
+      <div class="step-badge">Buchung abgeschlossen</div>
+      <h2>Fertig! ✅</h2>
+      <p>Deine Getränke wurden erfolgreich eingetragen. Du siehst eine Bestätigung mit allen gebuchten Artikeln.</p>
+      <p>Falls du etwas falsch gebucht hast, kannst du sofort auf <strong style="color:#ff9db5">„↩ Stornieren"</strong> tippen.</p>
+      <div class="tip-box">⏰ Nicht gebuchte Getränke werden automatisch um <strong>3:00 Uhr nachts</strong> gebucht.</div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 6: Meine Karte ═══ -->
+  <div class="slide">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="screen-karte">
+          <div class="app-header">
+            <div class="header-left">
+              <div class="logo">🎾</div>
+              <div style="margin-left:8px"><div class="title">TV Bruvi</div></div>
+            </div>
+          </div>
+          <div class="cart-header" style="padding-bottom:10px">
+            <div class="cart-title">📋 Meine Karte</div>
+            <button style="font-size:11px;background:white;border:1px solid #E2E8F0;border-radius:8px;padding:5px 10px;color:#475569">🖨 Drucken</button>
+          </div>
+          <div class="balance-card" style="margin:0 14px 10px">
+            <div><div class="balance-label">Offener Betrag</div><div class="balance-amount">12.40 €</div><div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:2px">5 offene Buchungen</div></div>
+            <span style="font-size:32px">📋</span>
+          </div>
+          <div class="stats-card">
+            <div class="stats-row">
+              <div class="stat-box"><div class="stat-num">8</div><div class="stat-lbl">diesen Monat</div></div>
+              <div class="stat-box"><div class="stat-num">2.0</div><div class="stat-lbl">Ø pro Woche</div></div>
+              <div class="stat-box"><div class="stat-num">22 €</div><div class="stat-lbl">diesen Monat</div></div>
+            </div>
+            <div style="font-size:11px;color:#64748B;margin-top:8px;text-align:center">❤️ Lieblingsgetränk: <strong>Pils</strong></div>
+          </div>
+          <div class="karte-items">
+            <div class="booking-item">
+              <div><div class="b-name">Pils</div><div class="b-sub">Bier · 2× · 31.03.</div></div>
+              <div class="b-right"><div class="b-price">5.60 €</div><div class="b-status status-open">offen</div></div>
+            </div>
+            <div class="booking-item">
+              <div><div class="b-name">Cola</div><div class="b-sub">Softdrinks · 1× · 31.03.</div></div>
+              <div class="b-right"><div class="b-price">2.50 €</div><div class="b-status status-open">offen</div></div>
+            </div>
+            <div class="booking-item" style="opacity:0.5">
+              <div><div class="b-name">Weizen</div><div class="b-sub">Bier · 1× · 21.03.</div></div>
+              <div class="b-right"><div class="b-price">3.00 €</div><div class="b-status" style="background:#F1F5F9;color:#94A3B8">abger.</div></div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item"><span>🏠</span>Start</div>
+            <div class="nav-item"><span>🍺</span>Eintragen</div>
+            <div class="nav-item active"><span>📋</span>Karte</div>
+            <div class="nav-item"><span>☰</span>Mehr</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar">
+      <div class="step-badge">Schritt 4 von 5</div>
+      <h2>Meine Karte</h2>
+      <p>Tippe unten auf das Karteikasten-Symbol <strong style="color:white">„Karte"</strong>. Hier siehst du deinen offenen Betrag, deine Statistik und alle bisherigen Buchungen.</p>
+      <p><span style="color:#86EFAC">Grün „offen"</span> = noch nicht abgerechnet. Grau = bereits abgerechnet.</p>
+      <div class="tip-box">🖨️ Mit dem Drucken-Button oben rechts kannst du deine Karte als PDF speichern oder ausdrucken.</div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 7: Profil & PIN ═══ -->
+  <div class="slide">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="screen-profile">
+          <div class="app-header">
+            <div class="header-left">
+              <div class="logo">🎾</div>
+              <div style="margin-left:8px"><div class="title">TV Bruvi</div></div>
+            </div>
+          </div>
+          <div style="padding:10px 14px 0;display:flex;align-items:center;gap:6px">
+            <span style="font-size:14px;color:#94A3B8">←</span>
+            <div class="page-title" style="font-size:18px">⚙️ Mein Profil</div>
+          </div>
+          <div class="profile-header-card">
+            <div class="avatar">MM</div>
+            <div><div class="profile-name">Max Mustermann</div><div class="profile-meta">#M042 · mitglied</div></div>
+          </div>
+          <div class="form-section">
+            <h3>Kontaktdaten</h3>
+            <div class="form-field"><label>E-Mail</label><input value="max@beispiel.de" /></div>
+            <div class="form-field"><label>Telefon</label><input placeholder="optional" /></div>
+            <button class="btn-save">💾 Profil speichern</button>
+          </div>
+          <div class="form-section">
+            <h3>🔑 PIN ändern</h3>
+            <div class="form-field"><label>Aktueller PIN</label><input type="password" placeholder="••••" /></div>
+            <div class="form-field"><label>Neuer PIN</label><input type="password" placeholder="••••" /></div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item"><span>🏠</span>Start</div>
+            <div class="nav-item"><span>🍺</span>Eintragen</div>
+            <div class="nav-item"><span>📋</span>Karte</div>
+            <div class="nav-item active"><span>☰</span>Mehr</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar">
+      <div class="step-badge">Schritt 5 von 5</div>
+      <h2>Profil &amp; PIN ändern</h2>
+      <p>Tippe auf <strong style="color:white">„Mehr" → „Profil"</strong>. Hier kannst du deine E-Mail und Telefonnummer hinterlegen und deinen PIN ändern.</p>
+      <p>Gib deinen aktuellen PIN ein, dann den neuen PIN (mind. 4 Stellen) und bestätige ihn.</p>
+      <div class="tip-box">📬 Hinterlege unbedingt eine E-Mail oder Telefonnummer — nur so kannst du deinen PIN selbst zurücksetzen, wenn du ihn vergisst!</div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 8: Ende ═══ -->
+  <div class="slide">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="screen-title" style="justify-content:center;gap:20px">
+          <div class="title-logo">🎾</div>
+          <div class="title-main" style="font-size:26px">Viel Spaß beim<br>Tennisspielen!</div>
+          <div class="title-sub">Guten Durst! 🍺</div>
+          <div style="background:rgba(255,255,255,0.1);border-radius:14px;padding:16px 20px;width:100%;max-width:260px;text-align:left">
+            <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:8px;font-weight:700">KURZZUSAMMENFASSUNG</div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:2">
+              🔐 Mit Vor-/Nachname + PIN anmelden<br>
+              🍺 Getränk tippen → Warenkorb<br>
+              ✅ „Alle eintragen" zum Buchen<br>
+              📋 Karte: Buchungen &amp; Kontostand<br>
+              🔑 Profil: PIN &amp; Kontaktdaten
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar">
+      <div class="step-badge">Das war's!</div>
+      <h2>Du bist startklar! 🎉</h2>
+      <p>Du kennst jetzt alle wichtigen Funktionen der TV Bruvi Getränke-App.</p>
+      <p>Bei Fragen oder Problemen wende dich an den <strong style="color:white">Vereins-Administrator</strong>.</p>
+      <div class="tip-box">📄 Die ausführliche Schritt-für-Schritt-Anleitung als PDF findest du im Vereinsbüro oder beim Kassenwart.</div>
+    </div>
+  </div>
+
+</div><!-- /stage -->
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const dotsEl = document.getElementById('dots');
+let current = 0;
+let autoPlay = true;
+let timer = null;
+const DELAY = 6000;
+
+// Build dots
+slides.forEach((_, i) => {
+  const d = document.createElement('div');
+  d.className = 'dot' + (i === 0 ? ' active' : '');
+  d.onclick = () => goTo(i);
+  dotsEl.appendChild(d);
+});
+
+function goTo(n) {
+  slides[current].classList.remove('active');
+  dotsEl.children[current].classList.remove('active');
+  current = (n + slides.length) % slides.length;
+  slides[current].classList.add('active');
+  dotsEl.children[current].classList.add('active');
+  document.getElementById('progress').style.width = ((current + 1) / slides.length * 100) + '%';
+  document.getElementById('counter').textContent = (current + 1) + ' / ' + slides.length;
+  resetTimer();
+}
+
+function nextSlide() { goTo(current + 1); }
+function prevSlide() { goTo(current - 1); }
+
+function resetTimer() {
+  if (timer) clearTimeout(timer);
+  if (autoPlay) timer = setTimeout(nextSlide, DELAY);
+}
+
+function toggleAutoPlay() {
+  autoPlay = !autoPlay;
+  document.getElementById('autoPlayBtn').textContent = autoPlay ? '⏸ Auto' : '▶ Auto';
+  resetTimer();
+}
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+  if (e.key === 'ArrowLeft') prevSlide();
+});
+
+// Init
+goTo(0);
+</script>
+</body>
+</html>

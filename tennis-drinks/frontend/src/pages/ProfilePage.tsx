@@ -4,22 +4,24 @@ import { useAuth } from '../context/AuthContext'
 import api from '../api'
 
 export default function ProfilePage() {
-  const { user, login, logout } = useAuth()
+  const { user, login, logout, clearMustChangePin, mustChangePin } = useAuth()
   const navigate = useNavigate()
 
   const [email, setEmail] = useState(user?.email || '')
   const [team, setTeam] = useState(user?.team || '')
   const [phone, setPhone] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  // PIN ändern
   const [currentPin, setCurrentPin] = useState('')
   const [newPin, setNewPin] = useState('')
   const [confirmPin, setConfirmPin] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
+  const [pinChanging, setPinChanging] = useState(false)
   const [pinError, setPinError] = useState('')
   const [pinSuccess, setPinSuccess] = useState(false)
 
   useEffect(() => {
-    // Profil-Daten nachladen (z.B. Telefon)
     api.get('/auth/me').then(r => {
       if (r.data) {
         setEmail(r.data.email || '')
@@ -33,7 +35,6 @@ export default function ProfilePage() {
     setSaving(true); setSaved(false)
     try {
       await api.put(`/members/${user!.id}`, { email, team, phone })
-      // User-Objekt im Context aktualisieren
       const updatedUser = { ...user!, email, team }
       login(localStorage.getItem('token')!, updatedUser)
       setSaved(true)
@@ -45,21 +46,78 @@ export default function ProfilePage() {
 
   const handleChangePin = async () => {
     setPinError(''); setPinSuccess(false)
-    if (newPin.length < 4) { setPinError('PIN muss mind. 4 Stellen haben'); return }
+    if (!currentPin) { setPinError('Bitte aktuellen PIN eingeben'); return }
+    if (newPin.length < 4) { setPinError('Neuer PIN muss mind. 4 Stellen haben'); return }
     if (newPin !== confirmPin) { setPinError('PINs stimmen nicht überein'); return }
+    setPinChanging(true)
     try {
-      await api.put(`/members/${user!.id}`, { pin: newPin })
+      await api.post('/auth/change-pin', { current_pin: currentPin, new_pin: newPin })
       setPinSuccess(true)
       setCurrentPin(''); setNewPin(''); setConfirmPin('')
-      setTimeout(() => setPinSuccess(false), 3000)
+      clearMustChangePin()
+      setTimeout(() => setPinSuccess(false), 4000)
     } catch (e: any) {
       setPinError(e.response?.data?.error || 'Fehler beim Ändern')
-    }
+    } finally { setPinChanging(false) }
   }
 
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
+  const handleLogout = () => { logout(); navigate('/login') }
+
+  // Erzwungener PIN-Wechsel – gesamte Seite
+  if (mustChangePin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4"
+        style={{ background: 'linear-gradient(160deg, #1A3B8F 0%, #0F2566 60%, #E8002D 100%)' }}>
+        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden">
+          <div className="flex flex-col items-center pt-6 pb-4 px-6"
+            style={{ background: 'linear-gradient(135deg, #E8002D 0%, #b5001f 100%)' }}>
+            <div className="text-4xl mb-2">🔑</div>
+            <h1 className="text-lg font-black text-white">PIN-Änderung erforderlich</h1>
+            <p className="text-xs text-white/80 mt-1 text-center">Du musst deinen PIN ändern bevor du fortfahren kannst.</p>
+          </div>
+          <div className="h-1" style={{ background: '#1A3B8F' }} />
+          <div className="p-6 space-y-4">
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Aktueller PIN</label>
+              <input type="password" value={currentPin} onChange={e => setCurrentPin(e.target.value)}
+                className="input-field text-center text-xl tracking-widest" placeholder="••••" maxLength={6} autoFocus />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Neuer PIN</label>
+              <input type="password" value={newPin} onChange={e => setNewPin(e.target.value)}
+                className="input-field text-center text-xl tracking-widest" placeholder="••••" maxLength={6} />
+              {newPin.length > 0 && (
+                <div className="mt-1 h-1.5 rounded-full bg-gray-100">
+                  <div className={`h-full rounded-full transition-all ${newPin.length >= 4 ? 'bg-green-500' : 'bg-red-400'}`}
+                    style={{ width: `${Math.min(100, (newPin.length / 4) * 100)}%` }} />
+                </div>
+              )}
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Neuen PIN bestätigen</label>
+              <input type="password" value={confirmPin} onChange={e => setConfirmPin(e.target.value)}
+                className="input-field text-center text-xl tracking-widest" placeholder="••••" maxLength={6} />
+              {confirmPin.length > 0 && newPin !== confirmPin && (
+                <p className="text-xs text-red-500 mt-1">PINs stimmen nicht überein</p>
+              )}
+              {confirmPin.length > 0 && newPin === confirmPin && newPin.length >= 4 && (
+                <p className="text-xs text-green-600 mt-1">✓ PINs stimmen überein</p>
+              )}
+            </div>
+            {pinError && <div className="bg-red-50 text-red-700 rounded-xl p-3 text-sm">{pinError}</div>}
+            {pinSuccess && <div className="bg-green-50 text-green-700 rounded-xl p-3 text-sm">✅ PIN erfolgreich geändert!</div>}
+            <button onClick={handleChangePin}
+              disabled={pinChanging || !currentPin || newPin.length < 4 || newPin !== confirmPin}
+              className="btn-primary text-sm disabled:opacity-50">
+              {pinChanging ? '⏳ Ändern...' : '🔑 PIN jetzt ändern'}
+            </button>
+            <button onClick={handleLogout} className="w-full text-center text-sm text-gray-400 hover:text-gray-600">
+              Abmelden
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -109,17 +167,18 @@ export default function ProfilePage() {
       <div className="card mb-4 space-y-3">
         <h3 className="font-bold text-tennis-dark">🔑 PIN ändern</h3>
         <div>
+          <label className="text-xs text-gray-500 mb-1 block">Aktueller PIN</label>
+          <input type="password" value={currentPin} onChange={e => setCurrentPin(e.target.value)}
+            className="input-field text-sm text-center text-xl tracking-widest" placeholder="••••" maxLength={6} />
+        </div>
+        <div>
           <label className="text-xs text-gray-500 mb-1 block">Neuer PIN</label>
           <input type="password" value={newPin} onChange={e => setNewPin(e.target.value)}
             className="input-field text-sm text-center text-xl tracking-widest" placeholder="••••" maxLength={6} />
-          {newPin.length > 0 && newPin.length < 4 && (
-            <div className="mt-1 h-1.5 rounded-full bg-red-200">
-              <div className="h-full rounded-full bg-red-500" style={{ width: `${(newPin.length / 4) * 100}%` }} />
-            </div>
-          )}
-          {newPin.length >= 4 && (
-            <div className="mt-1 h-1.5 rounded-full bg-green-200">
-              <div className="h-full rounded-full bg-green-500 w-full" />
+          {newPin.length > 0 && (
+            <div className="mt-1 h-1.5 rounded-full bg-gray-100">
+              <div className={`h-full rounded-full transition-all ${newPin.length >= 4 ? 'bg-green-500' : 'bg-red-400'}`}
+                style={{ width: `${Math.min(100, (newPin.length / 4) * 100)}%` }} />
             </div>
           )}
         </div>
@@ -137,9 +196,9 @@ export default function ProfilePage() {
         {pinError && <div className="bg-red-50 text-red-700 rounded-xl p-3 text-sm">{pinError}</div>}
         {pinSuccess && <div className="bg-green-50 text-green-700 rounded-xl p-3 text-sm">✅ PIN erfolgreich geändert!</div>}
         <button onClick={handleChangePin}
-          disabled={newPin.length < 4 || newPin !== confirmPin}
+          disabled={pinChanging || !currentPin || newPin.length < 4 || newPin !== confirmPin}
           className="btn-primary text-sm disabled:opacity-50">
-          🔑 PIN ändern
+          {pinChanging ? '⏳ Ändern...' : '🔑 PIN ändern'}
         </button>
       </div>
 

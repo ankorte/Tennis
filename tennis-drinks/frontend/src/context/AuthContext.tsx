@@ -6,6 +6,7 @@ interface AuthContextType {
   token: string | null
   login: (token: string, user: User) => void
   logout: () => void
+  clearMustChangePin: () => void
   updateUser: (updates: Partial<User>) => void
   isAdmin: boolean
   isThekenwart: boolean
@@ -54,13 +55,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
   }
 
+  const clearMustChangePin = () => {
+    if (!user) return
+    const updated = { ...user, must_change_pin: false }
+    localStorage.setItem('user', JSON.stringify(updated))
+    setUser(updated)
+  }
+
   const updateUser = (updates: Partial<User>) => {
-    setUser(prev => {
-      if (!prev) return prev
-      const updated = { ...prev, ...updates }
-      localStorage.setItem('user', JSON.stringify(updated))
-      return updated
-    })
+    if (!user) return
+    const updated = { ...user, ...updates }
+    localStorage.setItem('user', JSON.stringify(updated))
+    setUser(updated)
   }
 
   const isAdmin = user?.role === 'admin'
@@ -69,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const mustChangePin = user?.must_change_pin === true
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, updateUser, isAdmin, isThekenwart, isKassenwart, mustChangePin }}>
+    <AuthContext.Provider value={{ user, token, login, logout, clearMustChangePin, updateUser, isAdmin, isThekenwart, isKassenwart, mustChangePin }}>
       {children}
     </AuthContext.Provider>
   )

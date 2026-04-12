@@ -40,27 +40,54 @@ router.post('/', requireRole('admin', 'kassenwart'), (req: AuthRequest, res: Res
   }
 });
 
-router.put('/:id', requireRole('admin', 'kassenwart'), (req: AuthRequest, res: Response) => {
-  const { first_name, last_name, email, phone, status, role, team, active, pin, iban, bic, mandate_ref, mandate_date, daily_limit } = req.body;
-  const member = db.prepare('SELECT * FROM members WHERE id = ?').get(req.params.id) as any;
+router.put('/:id', (req: AuthRequest, res: Response) => {
+  const targetId = parseInt(req.params.id, 10);
+  const requesterId = req.user!.id;
+  const requesterRole = req.user!.role;
+  const isAdminOrKassenwart = requesterRole === 'admin' || requesterRole === 'kassenwart';
+  const isOwnProfile = requesterId === targetId;
+
+  // Nur Admin/Kassenwart darf fremde Profile bearbeiten
+  if (!isAdminOrKassenwart && !isOwnProfile) {
+    res.status(403).json({ error: 'Keine Berechtigung' }); return;
+  }
+
+  const { first_name, last_name, email, phone, status, role, team, active, pin, iban, bic, mandate_ref, mandate_date, daily_limit, must_change_pin } = req.body;
+  const member = db.prepare('SELECT * FROM members WHERE id = ?').get(targetId) as any;
   if (!member) { res.status(404).json({ error: 'Mitglied nicht gefunden' }); return; }
+
+  // Normale Mitglieder dürfen nur E-Mail und Telefon an ihrem eigenen Profil ändern
+  if (!isAdminOrKassenwart) {
+    db.prepare(`UPDATE members SET email=?, phone=?, updated_at=datetime('now') WHERE id=?`)
+      .run(email ?? member.email, phone ?? member.phone, targetId);
+    res.json({ message: 'Profil aktualisiert' }); return;
+  }
+
   const pin_hash = pin ? bcrypt.hashSync(String(pin), 10) : member.pin_hash;
   const newDailyLimit = daily_limit !== undefined
     ? (daily_limit === '' || daily_limit === null ? null : Number(daily_limit))
     : member.daily_limit;
+  const newMustChangePin = must_change_pin !== undefined ? (must_change_pin ? 1 : 0) : member.must_change_pin;
+
+  // Wenn active wird auf 1 gesetzt und war vorher wegen Lockout gesperrt → Zähler zurücksetzen
+  const newActive = active ?? member.active;
+  const resetLockout = newActive === 1 && member.active === 0 && member.locked_until === '9999-12-31T23:59:59';
+
   db.prepare(`
     UPDATE members SET first_name=?, last_name=?, email=?, phone=?, status=?, role=?, team=?, active=?, pin_hash=?,
-    iban=?, bic=?, mandate_ref=?, mandate_date=?, daily_limit=?, updated_at=datetime('now')
+    iban=?, bic=?, mandate_ref=?, mandate_date=?, daily_limit=?, must_change_pin=?,
+    ${resetLockout ? 'failed_login_attempts=0, locked_until=NULL,' : ''}
+    updated_at=datetime('now')
     WHERE id=?
   `).run(
     first_name ?? member.first_name, last_name ?? member.last_name, email ?? member.email,
     phone ?? member.phone, status ?? member.status, role ?? member.role, team ?? member.team,
-    active ?? member.active, pin_hash,
+    newActive, pin_hash,
     iban !== undefined ? iban : member.iban, bic !== undefined ? bic : member.bic,
     mandate_ref !== undefined ? mandate_ref : member.mandate_ref,
     mandate_date !== undefined ? mandate_date : member.mandate_date,
-    newDailyLimit,
-    req.params.id
+    newDailyLimit, newMustChangePin,
+    targetId
   );
   res.json({ message: 'Mitglied aktualisiert' });
 });
@@ -120,8 +147,14 @@ router.post('/:id/toggle-active', requireRole('admin', 'kassenwart'), (req: Auth
   const member = db.prepare('SELECT id, active FROM members WHERE id = ?').get(req.params.id) as any;
   if (!member) { res.status(404).json({ error: 'Mitglied nicht gefunden' }); return; }
   const newActive = member.active ? 0 : 1;
-  db.prepare(`UPDATE members SET active = ?, status = ?, updated_at = datetime('now') WHERE id = ?`)
-    .run(newActive, newActive ? 'aktiv' : 'inaktiv', member.id);
+  // Beim Aktivieren: Lockout-Zähler zurücksetzen
+  if (newActive === 1) {
+    db.prepare(`UPDATE members SET active = ?, status = ?, failed_login_attempts = 0, locked_until = NULL, updated_at = datetime('now') WHERE id = ?`)
+      .run(newActive, 'aktiv', member.id);
+  } else {
+    db.prepare(`UPDATE members SET active = ?, status = ?, updated_at = datetime('now') WHERE id = ?`)
+      .run(newActive, 'inaktiv', member.id);
+  }
   res.json({ message: newActive ? 'Mitglied aktiviert' : 'Mitglied deaktiviert', active: newActive });
 });
 

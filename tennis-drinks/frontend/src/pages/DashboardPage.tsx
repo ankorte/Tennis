@@ -1,30 +1,25 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import { useToast } from '../components/Toast'
 import api from '../api'
 import { CATEGORY_LABELS } from '../types'
-import ConfirmModal from '../components/ConfirmModal'
 
 interface FavDrink {
   id: number; name: string; category: string; price: number; stock: number; unit: string; active: number; total_qty: number
 }
 
 export default function DashboardPage() {
-  const { user, isThekenwart, isKassenwart, isAdmin } = useAuth()
+  const { user, isThekenwart, isKassenwart } = useAuth()
   const { addItem } = useCart()
   const { showToast } = useToast()
-  const navigate = useNavigate()
   const [balance, setBalance] = useState<number>(0)
   const [dashboard, setDashboard] = useState<any>(null)
   const [lowStock, setLowStock] = useState<any[]>([])
   const [favorites, setFavorites] = useState<FavDrink[]>([])
   const [addedId, setAddedId] = useState<number | null>(null)
-  const [showRestore, setShowRestore] = useState(false)
-  const [restoring, setRestoring] = useState(false)
   const [lastBooking, setLastBooking] = useState<{ drink_name: string; quantity: number; total_price: number; created_at: string } | null>(null)
-  const [pendingRestoreFile, setPendingRestoreFile] = useState<File | null>(null)
 
   useEffect(() => {
     api.get(`/members/${user!.id}/balance`).then(r => setBalance(r.data?.open_amount ?? 0)).catch(() => showToast('Kontostand konnte nicht geladen werden'))
@@ -44,57 +39,6 @@ export default function DashboardPage() {
     }
   }, [])
 
-  const handleBackup = async () => {
-    try {
-      const res = await api.get('/backup', { responseType: 'blob' })
-      const blob = new Blob([res.data], { type: 'application/octet-stream' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
-      a.download = `tennis-backup-${ts}.db`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-    } catch {
-      alert('Backup fehlgeschlagen')
-    }
-  }
-
-  const handleRestoreFile = async (file: File) => {
-    if (!file.name.endsWith('.db')) {
-      showToast('Bitte eine .db Datei auswählen')
-      return
-    }
-    // SQLite Header prüfen (erste 16 Bytes)
-    const headerBytes = await file.slice(0, 16).text()
-    if (!headerBytes.startsWith('SQLite format 3')) {
-      showToast('❌ Diese Datei ist keine gültige SQLite-Datenbank.')
-      return
-    }
-    setPendingRestoreFile(file)
-  }
-
-  const doRestore = async () => {
-    if (!pendingRestoreFile) return
-    setPendingRestoreFile(null)
-    setRestoring(true)
-    try {
-      const formData = new FormData()
-      formData.append('file', pendingRestoreFile)
-      const res = await api.post('/backup/restore', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 60000,
-      })
-      showToast(`✅ ${res.data.message} – Seite wird neu geladen...`)
-      setTimeout(() => window.location.reload(), 3000)
-    } catch (e: any) {
-      showToast('❌ Fehler: ' + (e.response?.data?.error || (e as any).message))
-      setRestoring(false)
-    }
-  }
-
   const handleQuickAdd = (fav: FavDrink) => {
     if (fav.stock <= 0) return
     addItem({ id: fav.id, name: fav.name, category: fav.category, price: fav.price, stock: fav.stock, unit: fav.unit, active: fav.active, article_number: '', min_stock: 0 })
@@ -104,16 +48,6 @@ export default function DashboardPage() {
 
   return (
     <div className="p-4 max-w-lg mx-auto">
-      {pendingRestoreFile && (
-        <ConfirmModal
-          title="Datenbank wiederherstellen?"
-          message={`⚠️ Die aktuelle Datenbank wird durch "${pendingRestoreFile.name}" (${(pendingRestoreFile.size / 1024).toFixed(0)} KB) ersetzt!\n\nDie aktuelle Datenbank wird vorher automatisch gesichert. Der Server startet danach neu.\n\nWirklich fortfahren?`}
-          confirmLabel="Wiederherstellen"
-          danger
-          onConfirm={doRestore}
-          onCancel={() => setPendingRestoreFile(null)}
-        />
-      )}
       <div className="mt-2 mb-6">
         <h2 className="text-xl font-bold text-tennis-dark">Hallo, {user?.first_name}! 👋</h2>
         <p className="text-gray-500 text-sm">{user?.team || 'TV Bruvi – Sparte Tennis'}</p>
@@ -220,59 +154,6 @@ export default function DashboardPage() {
             </div>
           )}
 
-          <div className="grid grid-cols-3 gap-2">
-            {isKassenwart && <Link to="/members" className="btn-secondary text-center text-xs py-2">👤 Mitglieder</Link>}
-            <Link to="/drinks" className="btn-secondary text-center text-xs py-2">🍺 Getränke</Link>
-            {isKassenwart && <Link to="/admin/bookings" className="btn-secondary text-center text-xs py-2">📋 Buchungen</Link>}
-            {isThekenwart && <Link to="/admin/carts" className="btn-secondary text-center text-xs py-2">🛒 Warenkörbe</Link>}
-            <Link to="/inventory" className="btn-secondary text-center text-xs py-2">📦 Lager</Link>
-            {isThekenwart && <Link to="/admin/stats" className="btn-secondary text-center text-xs py-2">📊 Statistiken</Link>}
-            {isKassenwart && <Link to="/sepa" className="btn-secondary text-center text-xs py-2">🏦 SEPA</Link>}
-            {isKassenwart && <Link to="/email" className="btn-secondary text-center text-xs py-2">📧 E-Mail</Link>}
-            {isAdmin && (
-              <button onClick={handleBackup} className="btn-secondary text-center text-xs py-2">💾 Backup</button>
-            )}
-            {isAdmin && (
-              <button onClick={() => setShowRestore(!showRestore)}
-                className="btn-secondary text-center text-xs py-2">
-                📤 Restore
-              </button>
-            )}
-            {isAdmin && (
-              <button onClick={() => navigate('/database')}
-                className="btn-secondary text-center text-xs py-2">
-                🗄️ Datenbank
-              </button>
-            )}
-          </div>
-
-          {/* DB Restore Dialog */}
-          {showRestore && (
-            <div className="card border-l-4 border-red-500 mt-3">
-              <h4 className="font-bold text-red-700 mb-2">📤 Datenbank wiederherstellen</h4>
-              <p className="text-xs text-gray-500 mb-3">
-                Lade eine zuvor gesicherte .db-Datei hoch. Die aktuelle Datenbank wird automatisch gesichert bevor sie ersetzt wird.
-                Der Server startet danach neu.
-              </p>
-              <div className="flex items-center gap-2">
-                <label className={`flex-1 cursor-pointer text-center py-3 rounded-xl border-2 border-dashed transition-colors text-sm font-semibold
-                  ${restoring ? 'border-gray-200 text-gray-400 cursor-wait' : 'border-red-300 text-red-600 hover:bg-red-50'}`}>
-                  {restoring ? '⏳ Wiederherstellen...' : '📁 .db Datei auswählen'}
-                  <input type="file" accept=".db" className="hidden" disabled={restoring}
-                    onChange={e => {
-                      const file = e.target.files?.[0]
-                      if (file) handleRestoreFile(file)
-                      e.target.value = ''
-                    }} />
-                </label>
-                <button onClick={() => setShowRestore(false)}
-                  className="text-gray-400 hover:text-gray-600 text-lg px-2">✕</button>
-              </div>
-              <p className="text-[10px] text-red-400 mt-2">
-                ⚠️ Dieser Vorgang ersetzt ALLE aktuellen Daten! Nur verwenden wenn du dir sicher bist.
-              </p>
-            </div>
-          )}
         </div>
       )}
     </div>

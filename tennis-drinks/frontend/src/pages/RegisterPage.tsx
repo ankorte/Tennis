@@ -5,7 +5,7 @@ import api from '../api'
 export default function RegisterPage() {
   const navigate = useNavigate()
   const [form, setForm] = useState({
-    member_number: '', first_name: '', last_name: '',
+    first_name: '', last_name: '',
     email: '', phone: '', pin: '', pin2: '',
   })
   const [loading, setLoading] = useState(false)
@@ -23,10 +23,9 @@ export default function RegisterPage() {
     setLoading(true)
     try {
       await api.post('/auth/register', {
-        member_number: form.member_number,
         first_name: form.first_name,
         last_name: form.last_name,
-        email: form.email,
+        email: form.email || undefined,
         phone: form.phone || undefined,
         pin: form.pin,
       })
@@ -80,13 +79,6 @@ export default function RegisterPage() {
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-3">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">Mitgliedsnummer *</label>
-                  <input value={form.member_number} onChange={set('member_number')}
-                    className="input-field" placeholder="z. B. M042" required />
-                  <p className="text-xs text-gray-400 mt-1">Steht auf deinem Mitgliedsausweis / Beitrittsdokument</p>
-                </div>
-
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1">Vorname *</label>
